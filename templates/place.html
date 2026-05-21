@@ -22,7 +22,7 @@
     <div class="container">
       <article class="ux-entityHeroGrid ux-placeHeroGrid">
         <div class="ux-entityHeroMedia">
-          <img src="/media/place/{{ lang }}/{{ country.slug }}/{{ city.citySlug }}/{{ place.slug }}" alt="{{ place.name }}" loading="eager" decoding="async"/>
+          <img src="/media/place/en/{{ country.slug }}/{{ city.citySlug }}/{{ place.slug }}" alt="{{ place.name }}" loading="eager" decoding="async"/>
         </div>
         <div class="ux-entityHeroCopy">
           <span class="ux-badge">{{ T["type_place"] }}</span>
@@ -50,7 +50,7 @@
                       data-city="{{ city.name }}"
                       data-country="{{ country.name }}"
                       data-page-url="{{ guide_save_url }}"
-                      data-image="/media/place/{{ lang }}/{{ country.slug }}/{{ city.citySlug }}/{{ place.slug }}">
+                      data-image="/media/place/en/{{ country.slug }}/{{ city.citySlug }}/{{ place.slug }}">
                 {{ T["hero_saved"] if guide_is_saved else T["player_save"] }}
               </button>
             {% else %}
@@ -173,7 +173,7 @@
           {% for p in places[:12] %}
             <article class="ux-guideCard ux-placeGuideCard">
               <a class="ux-cardImageLink" href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}" aria-label="Open {{ p.name }} audio guide">
-                <img src="/media/place/{{ lang }}/{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}"
+                <img src="/media/place/en/{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}"
                      alt="{{ p.name }}" loading="lazy" decoding="async"/>
               </a>
               <div class="ux-guideCardBody">
@@ -261,7 +261,7 @@
         <ul class="ag-mapPlaceList" id="cityMapPlaceList">
           {% for p in map_places[:30] %}
             {% set place_url = route_prefix ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
-            {% set place_img = "/media/place/" ~ lang ~ "/" ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
+            {% set place_img = "/media/place/en/" ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
             {% set place_category = p.categoryLabel if p.categoryLabel is defined and p.categoryLabel else (p.category if p.category is defined and p.category else T["category_landmark"]) %}
             <li data-place-row="{{ p.slug }}" data-place-category="{{ place_category|lower }}">
               <button class="ag-mapPlaceSelect" type="button" data-place-select="{{ p.slug }}" aria-label="{{ T["hero_open_map"] }}: {{ p.name }}">

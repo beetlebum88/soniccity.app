@@ -57,12 +57,12 @@
   function placeImg(place) {
     if (window.AG_PLACE_IMG_URL) {
       return window.AG_PLACE_IMG_URL({
-        lang,
+        lang: "en",
         countrySlug: page.countrySlug,
         citySlug: page.citySlug,
       }, place.slug);
     }
-    return `/media/place/${lang}/${page.countrySlug}/${page.citySlug}/${place.slug}`;
+    return `/media/place/en/${page.countrySlug}/${page.citySlug}/${place.slug}`;
   }
 
   const places = rawPlaces

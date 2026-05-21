@@ -852,7 +852,7 @@ function placeUrl(ctx, placeSlug) {
 }
 
 function placeImgUrl(ctx, placeSlug) {
-  const l = encodeURIComponent(ctx?.lang || "en");
+  const l = "en";
   const ctry = encodeURIComponent(ctx?.countrySlug || "");
   const cty = encodeURIComponent(ctx?.citySlug || "");
   const pl = encodeURIComponent(placeSlug || "");

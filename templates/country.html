@@ -142,7 +142,7 @@
             <div class="ux-miniList">
               {% for c in cities[:5] %}
                 <a href="{{ route_prefix }}{{ c.countrySlug }}/{{ c.citySlug }}">
-                  <img src="/media/city/{{ lang }}/{{ c.countrySlug }}/{{ c.citySlug }}" alt="{{ c.name }}" loading="lazy" decoding="async"/>
+                  <img src="/media/city/en/{{ c.countrySlug }}/{{ c.citySlug }}" alt="{{ c.name }}" loading="lazy" decoding="async"/>
                   <span>{{ c.name }}</span>
                 </a>
               {% endfor %}
@@ -166,7 +166,7 @@
         {% for c in cities[:12] %}
           <article class="ux-guideCard ux-cityGuideCard">
             <a class="ux-cardImageLink" href="{{ route_prefix }}{{ c.countrySlug }}/{{ c.citySlug }}" aria-label="Open {{ c.name }} audio guide">
-              <img src="/media/city/{{ lang }}/{{ c.countrySlug }}/{{ c.citySlug }}" alt="{{ c.name }}" loading="lazy" decoding="async"/>
+              <img src="/media/city/en/{{ c.countrySlug }}/{{ c.citySlug }}" alt="{{ c.name }}" loading="lazy" decoding="async"/>
             </a>
             <div class="ux-guideCardBody">
               <a class="ux-badge ux-badgeLink" href="{{ route_prefix }}{{ country.slug }}" aria-label="Open {{ country.name }} audio guides">{{ country.name }}</a>
@@ -196,7 +196,7 @@
           {% for p in top_places %}
             <article class="ux-placeCatalogCard">
               <a class="ux-placeCatalogLink" href="{{ route_prefix }}{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}">
-                <img src="/media/place/{{ lang }}/{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}" alt="{{ p.name }}" loading="lazy" decoding="async"/>
+                <img src="/media/place/en/{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}" alt="{{ p.name }}" loading="lazy" decoding="async"/>
                 <span>
                   <small>{{ p.categoryLabel if p.categoryLabel is defined else p.category }} · {{ p.cityName }}</small>
                   <b>{{ p.name }}</b>

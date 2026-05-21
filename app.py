@@ -6626,6 +6626,7 @@ ROUTE_OSRM_DRIVING_URL = str(os.getenv("ROUTE_OSRM_DRIVING_URL") or "https://rou
 PLACE_IMAGE_PLACEHOLDER_PATH = ROOT / "static" / "img" / "place-placeholder.svg"
 CITY_IMAGE_CACHE_DIR = ROOT / "cache" / "city_images"
 COUNTRY_IMAGE_CACHE_DIR = ROOT / "cache" / "country_images"
+CANONICAL_IMAGE_LANG = "en"
 
 PLACE_METADATA_OVERRIDES: Dict[Tuple[str, str, str], Dict[str, Any]] = {
     ("spain", "valencia", "city-of-arts-and-sciences"): {
@@ -7715,7 +7716,7 @@ def landing_primary_image(lang: str, featured_places: List[Dict[str, Any]]) -> s
         cty = str(p.get("citySlug") or "")
         pslug = str(p.get("slug") or "")
         if cslug and cty and pslug:
-            return f"/media/place/{normalize_lang(lang)}/{cslug}/{cty}/{pslug}"
+            return f"/media/place/{CANONICAL_IMAGE_LANG}/{cslug}/{cty}/{pslug}"
     return "/static/img/place-placeholder.svg"
 
 
@@ -9471,14 +9472,14 @@ def media_place_image(lang: str, country_slug: str, city_slug: str, place_slug: 
 
     force = str(request.args.get("force") or "").strip().lower() in {"1", "true", "yes"}
 
-    wiki_lang = SUPPORTED_LANGS[lang]["wiki"]
-    cache_dir_req = PLACE_IMAGE_CACHE_DIR / wiki_lang / country_slug / city_slug
-    cache_dir_en = PLACE_IMAGE_CACHE_DIR / "en" / country_slug / city_slug
+    # Visual media must be language-stable. Translated Wikipedia pages can point
+    # to different thumbnails, so city/place photos use one canonical cache.
+    wiki_lang = CANONICAL_IMAGE_LANG
+    cache_dir_req = PLACE_IMAGE_CACHE_DIR / CANONICAL_IMAGE_LANG / country_slug / city_slug
+    cache_dir_en = cache_dir_req
     cache_dir_req.mkdir(parents=True, exist_ok=True)
 
     candidate_dirs = [cache_dir_req]
-    if wiki_lang != "en":
-        candidate_dirs.append(cache_dir_en)
 
     title = str(place.get("name") or "").strip()
     city_name = str(place.get("cityName") or "").strip()
@@ -9488,7 +9489,7 @@ def media_place_image(lang: str, country_slug: str, city_slug: str, place_slug: 
     direct_image_url = str(place.get("imageUrl") or place.get("image") or "").strip()
     has_direct_image = direct_image_url.startswith(("http://", "https://"))
 
-    # Serve from cache first (requested lang, then English fallback).
+    # Serve from the canonical cache first.
     for cache_dir in candidate_dirs:
         cached_exts = (".jpg", ".png", ".webp", ".gif") if has_direct_image else (".jpg", ".png", ".webp", ".gif", ".svg")
         for ext in cached_exts:
@@ -9516,7 +9517,6 @@ def media_place_image(lang: str, country_slug: str, city_slug: str, place_slug: 
                     pass
 
     # If we've previously concluded "no image", skip refetching (unless forced).
-    # Important: don't let the EN fallback ".missing" block a request-language fetch.
     if not force and PLACE_IMAGE_PLACEHOLDER_PATH.exists() and not has_direct_image:
         if (cache_dir_req / f"{place_slug}.missing").exists():
             return generated_media_svg_file_response(cache_dir_req, place_slug, generated_title, generated_subtitle, "Place Audio Guide")
@@ -9591,21 +9591,6 @@ def media_place_image(lang: str, country_slug: str, city_slug: str, place_slug: 
                 break
 
     used_cache_dir = cache_dir_req
-    if not thumb_url and wiki_lang != "en":
-        for cand in title_candidates:
-            thumb_url = wiki_thumbnail_url("en", cand)
-            if thumb_url:
-                break
-        if not thumb_url:
-            for q in search_candidates:
-                thumb_url = commons_thumbnail_url_search(q, size_px=1200)
-                if thumb_url:
-                    break
-                thumb_url = wiki_thumbnail_url_search("en", q)
-                if thumb_url:
-                    break
-        if thumb_url:
-            used_cache_dir = cache_dir_en
 
     # Last resort: fall back to the city's hero image (better than a placeholder).
     if not thumb_url:
@@ -9616,12 +9601,6 @@ def media_place_image(lang: str, country_slug: str, city_slug: str, place_slug: 
             used_cache_dir = cache_dir_req
             if not thumb_url:
                 thumb_url = wiki_thumbnail_url_search(wiki_lang, f"{city_title} {country_name}".strip(), size_px=1200)
-            if not thumb_url and wiki_lang != "en":
-                thumb_url = wiki_thumbnail_url("en", city_title, size_px=1200)
-                if not thumb_url:
-                    thumb_url = wiki_thumbnail_url_search("en", f"{city_title} {country_name}".strip(), size_px=1200)
-                if thumb_url:
-                    used_cache_dir = cache_dir_en
 
     if not thumb_url:
         try:
@@ -9691,14 +9670,13 @@ def media_city_image(lang: str, country_slug: str, city_slug: str):
         abort(404)
 
     force = str(request.args.get("force") or "").strip().lower() in {"1", "true", "yes"}
-    wiki_lang = SUPPORTED_LANGS[lang]["wiki"]
-    cache_dir_req = CITY_IMAGE_CACHE_DIR / wiki_lang / country_slug
-    cache_dir_en = CITY_IMAGE_CACHE_DIR / "en" / country_slug
+    # City hero/card images must not change when the UI language changes.
+    wiki_lang = CANONICAL_IMAGE_LANG
+    cache_dir_req = CITY_IMAGE_CACHE_DIR / CANONICAL_IMAGE_LANG / country_slug
+    cache_dir_en = cache_dir_req
     cache_dir_req.mkdir(parents=True, exist_ok=True)
 
     candidate_dirs = [cache_dir_req]
-    if wiki_lang != "en":
-        candidate_dirs.append(cache_dir_en)
 
     if not force:
         for d in candidate_dirs:
@@ -9710,17 +9688,11 @@ def media_city_image(lang: str, country_slug: str, city_slug: str):
                     return resp
 
     title = str(city.get("wikiTitle") or city.get("name") or "").strip()
-    country_name = str(country_view.get("displayName") or country_view.get("name") or "").strip()
+    country_name = str(country.get("name") or country_view.get("displayName") or country_view.get("name") or "").strip()
     thumb_url = wiki_thumbnail_url(wiki_lang, title, size_px=1200)
     if not thumb_url:
         thumb_url = wiki_thumbnail_url_search(wiki_lang, f"{title} {country_name}".strip(), size_px=1200)
     used_dir = cache_dir_req
-    if not thumb_url and wiki_lang != "en":
-        thumb_url = wiki_thumbnail_url("en", title, size_px=1200)
-        if not thumb_url:
-            thumb_url = wiki_thumbnail_url_search("en", f"{title} {country_name}".strip(), size_px=1200)
-        if thumb_url:
-            used_dir = cache_dir_en
 
     if not thumb_url:
         return generated_media_svg_file_response(cache_dir_req, city_slug, title or city_slug.replace("-", " ").title(), country_name, "City Audio Guide")
@@ -14794,7 +14766,7 @@ def city_page(lang: str, country_slug: str, city_slug: str):
         city=city_view["displayName"],
         country=country_view["displayName"],
     )
-    seo_image = f"/media/city/{lang}/{country_slug}/{resolved_city_slug}"
+    seo_image = f"/media/city/{CANONICAL_IMAGE_LANG}/{country_slug}/{resolved_city_slug}"
     auto_faq = auto_faq_for_page(
         "city",
         lang=lang,
@@ -14987,7 +14959,7 @@ def place_page(lang: str, country_slug: str, city_slug: str, place_slug: str):
         city=city_view["displayName"],
         country=country_view["displayName"],
     )
-    seo_image = f"/media/place/{lang}/{country_slug}/{city_slug}/{place_slug}"
+    seo_image = f"/media/place/{CANONICAL_IMAGE_LANG}/{country_slug}/{city_slug}/{place_slug}"
     auto_faq = auto_faq_for_page(
         "place",
         lang=lang,
