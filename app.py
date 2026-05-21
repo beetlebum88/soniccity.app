@@ -83,6 +83,7 @@ CITIES_PATH = ROOT / "cities.json"
 COUNTRIES_PATH = ROOT / "country_flags.json"
 TOP_PLACES_PATH = ROOT / "data" / "all_countries_top30_with_descriptions.json"
 PLACES_INDEX_PATH = ROOT / "data" / "data_index_with_places.json"
+ENTITY_TITLE_TRANSLATIONS_PATH = ROOT / "data" / "entity_title_translations.json"
 LOG_DIR = ROOT / "logs"
 ACCESS_LOG_PATH = LOG_DIR / "access.jsonl"
 ADMIN_DATA_DIR = ROOT / "data" / "admin"
@@ -216,6 +217,9 @@ AUDIO_BUILD_SEMAPHORE = threading.Semaphore(AUDIO_BUILD_WEB_WORKERS)
 TITLE_I18N_CACHE_DIR = ROOT / "cache" / "title_i18n"
 TITLE_I18N_MEM: Dict[str, str] = {}
 TITLE_I18N_LOCK = threading.Lock()
+ENTITY_TITLE_TRANSLATIONS_MEM: Optional[Dict[str, Any]] = None
+ENTITY_TITLE_TRANSLATIONS_MTIME: float = 0.0
+ENTITY_TITLE_TRANSLATIONS_LOCK = threading.Lock()
 
 CONTINENTS_ORDER = ["Africa", "Asia", "Europe", "North America", "South America", "Oceania"]
 
@@ -8620,6 +8624,70 @@ def write_title_i18n_cache(path: Path, title: str) -> None:
         pass
 
 
+def entity_title_translation_key(
+    kind: str,
+    *,
+    country_slug: str = "",
+    city_slug: str = "",
+    place_slug: str = "",
+) -> str:
+    kind = str(kind or "").strip().lower()
+    country_slug = str(country_slug or "").strip().lower()
+    city_slug = str(city_slug or "").strip().lower()
+    place_slug = str(place_slug or "").strip().lower()
+    if kind == "country":
+        return country_slug
+    if kind == "city":
+        return f"{country_slug}/{city_slug}".strip("/")
+    return f"{country_slug}/{city_slug}/{place_slug}".strip("/")
+
+
+def load_entity_title_translations() -> Dict[str, Any]:
+    global ENTITY_TITLE_TRANSLATIONS_MEM, ENTITY_TITLE_TRANSLATIONS_MTIME
+    with ENTITY_TITLE_TRANSLATIONS_LOCK:
+        try:
+            current_mtime = ENTITY_TITLE_TRANSLATIONS_PATH.stat().st_mtime
+        except OSError:
+            current_mtime = 0.0
+        if ENTITY_TITLE_TRANSLATIONS_MEM is not None and current_mtime == ENTITY_TITLE_TRANSLATIONS_MTIME:
+            return ENTITY_TITLE_TRANSLATIONS_MEM
+        try:
+            data = load_json(ENTITY_TITLE_TRANSLATIONS_PATH)
+            if not isinstance(data, dict):
+                data = {}
+            titles = data.get("titles")
+            ENTITY_TITLE_TRANSLATIONS_MEM = titles if isinstance(titles, dict) else {}
+            ENTITY_TITLE_TRANSLATIONS_MTIME = current_mtime
+        except Exception:
+            ENTITY_TITLE_TRANSLATIONS_MEM = {}
+            ENTITY_TITLE_TRANSLATIONS_MTIME = current_mtime
+        return ENTITY_TITLE_TRANSLATIONS_MEM
+
+
+def stored_entity_title(
+    *,
+    kind: str,
+    lang: str,
+    country_slug: str = "",
+    city_slug: str = "",
+    place_slug: str = "",
+) -> str:
+    lang = normalize_lang(lang)
+    if lang == DEFAULT_LANG:
+        return ""
+    key = entity_title_translation_key(
+        kind,
+        country_slug=country_slug,
+        city_slug=city_slug,
+        place_slug=place_slug,
+    )
+    if not key:
+        return ""
+    store = load_entity_title_translations()
+    value = (((store.get(lang) or {}).get(str(kind or "").strip().lower()) or {}).get(key) or "")
+    return str(value or "").strip()
+
+
 def wiki_langlink_title(from_wiki_lang: str, title: str, target_wiki_lang: str) -> str:
     from_wiki_lang = str(from_wiki_lang or "").strip().lower()
     target_wiki_lang = str(target_wiki_lang or "").strip().lower()
@@ -8695,6 +8763,18 @@ def resolve_localized_title(
         cached_mem = TITLE_I18N_MEM.get(mem_key)
     if cached_mem:
         return cached_mem
+
+    stored = stored_entity_title(
+        kind=kind,
+        lang=lang,
+        country_slug=country_slug,
+        city_slug=city_slug,
+        place_slug=place_slug,
+    )
+    if stored:
+        with TITLE_I18N_LOCK:
+            TITLE_I18N_MEM[mem_key] = stored
+        return stored
 
     cache_path = title_i18n_cache_path(
         kind=kind,
@@ -8772,6 +8852,17 @@ def cached_localized_title(
         cached_mem = TITLE_I18N_MEM.get(mem_key)
     if cached_mem:
         return cached_mem
+    stored = stored_entity_title(
+        kind=kind,
+        lang=lang,
+        country_slug=country_slug,
+        city_slug=city_slug,
+        place_slug=place_slug,
+    )
+    if stored:
+        with TITLE_I18N_LOCK:
+            TITLE_I18N_MEM[mem_key] = stored
+        return stored
     cache_path = title_i18n_cache_path(
         kind=kind,
         lang=lang,
