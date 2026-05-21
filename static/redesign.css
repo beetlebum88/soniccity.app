@@ -4845,6 +4845,25 @@ body{
   letter-spacing:0;
 }
 
+.ct-navbar .navbar-toggler{
+  border:1px solid rgba(180,197,244,.56) !important;
+  border-radius:8px !important;
+  padding:10px 12px !important;
+  box-shadow:none !important;
+}
+
+.ct-navbar .navbar-toggler-icon{
+  width:26px !important;
+  height:20px !important;
+  background-image:
+    linear-gradient(var(--nx-ink), var(--nx-ink)),
+    linear-gradient(var(--nx-ink), var(--nx-ink)),
+    linear-gradient(var(--nx-ink), var(--nx-ink)) !important;
+  background-position:50% 2px, 50% 50%, 50% calc(100% - 2px) !important;
+  background-repeat:no-repeat !important;
+  background-size:24px 2px !important;
+}
+
 .ct-brandLogo{
   display:inline-flex !important;
   align-items:center !important;
@@ -4858,6 +4877,21 @@ body{
   max-width:42vw !important;
   height:auto !important;
   object-fit:contain !important;
+}
+
+.ct-brandTextFallback{
+  display:inline-flex;
+  align-items:center;
+  min-height:50px;
+  color:var(--nx-ink);
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:-.01em;
+  line-height:1;
+}
+
+.ct-brandTextFallback[hidden]{
+  display:none !important;
 }
 
 .ct-footerLogo{
@@ -7489,6 +7523,22 @@ body{
   height:15px;
   border-radius:3px;
   object-fit:cover;
+}
+
+.FlagFallback{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  width:24px;
+  height:18px;
+  font-size:18px;
+  line-height:1;
+  overflow:hidden;
+}
+
+.FlagFallback[hidden]{
+  display:none !important;
 }
 
 .PageLanding .ag-cityListText{

@@ -7004,6 +7004,13 @@ def flag_url_from_code(code: str) -> str:
     return ""
 
 
+def flag_emoji_from_code(code: str) -> str:
+    code = (code or "").strip().upper()
+    if len(code) != 2 or not code.isalpha():
+        return "🌍"
+    return "".join(chr(0x1F1E6 + ord(ch) - ord("A")) for ch in code)
+
+
 def load_countries() -> List[Dict[str, Any]]:
     data = load_json(COUNTRIES_PATH)
     if data is None:
@@ -7027,6 +7034,7 @@ def load_countries() -> List[Dict[str, Any]]:
                     "capital": str(c.get("capital") or "").strip(),
                     "slug": slugify(name),
                     "flagUrl": flag_url_from_code(code),
+                    "flagEmoji": flag_emoji_from_code(code),
                 }
             )
     print(f"[OK] Loaded countries: {len(out)}")
@@ -11075,6 +11083,7 @@ def api_search():
                     "slug": c["slug"],
                     "code": c["code"],
                     "flag": c["flagUrl"],
+                    "flagEmoji": c.get("flagEmoji") or "🌍",
                     "label": t(lang)["type_country"],
                     "url": country_url(lang, c["slug"]),
                 }
@@ -11102,6 +11111,7 @@ def api_search():
                 "countryName": country_display_name_cached_for_lang(co, lang),
                 "countrySlug": co["slug"],
                 "flag": co["flagUrl"],
+                "flagEmoji": co.get("flagEmoji") or "🌍",
                 "label": t(lang)["type_place"],
                 "population": int(p.get("population") or 0),
                 "url": city_url(lang, co["slug"], city_slug),
@@ -11131,6 +11141,7 @@ def api_search():
                 "countryName": country_display_name_cached_for_lang(co, lang),
                 "countrySlug": co["slug"],
                 "flag": co["flagUrl"],
+                "flagEmoji": co.get("flagEmoji") or "🌍",
                 "label": t(lang)["type_place"],
                 "url": place_url(lang, co["slug"], ctyslug, pslug),
             }
@@ -11157,6 +11168,7 @@ def api_search():
                     "countryName": country_display,
                     "countrySlug": co["slug"],
                     "flag": co["flagUrl"],
+                    "flagEmoji": co.get("flagEmoji") or "🌍",
                     "label": t(lang)["type_city"],
                     "url": city_url(lang, co["slug"], city_slug),
                 }

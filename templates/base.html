@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="{{ HTML_LANG if HTML_LANG else CURRENT_LANG }}">
 <head>
-  {% set ASSET_VER = "20260521-lang-menu-full" %}
+  {% set ASSET_VER = "20260521-mobile-assets-1" %}
   {% set _csrf_token = CSRF_TOKEN() if CSRF_TOKEN is defined else '' %}
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -83,7 +83,8 @@
   <nav class="navbar navbar-expand-lg fixed-top ct-navbar">
     <div class="container">
       <a class="navbar-brand ag-brand ct-brand ct-brandLogo" href="{{ NAV_HOME_URL }}" aria-label="{{ BRAND_NAME }}">
-        <img src="{{ url_for('static', filename='img/soniccity-logo.png') }}?v={{ ASSET_VER }}" alt="{{ BRAND_NAME }}" width="184" height="50"/>
+        <img src="{{ url_for('static', filename='img/soniccity-logo.png') }}?v={{ ASSET_VER }}" alt="{{ BRAND_NAME }}" width="184" height="50" onerror="this.hidden=true;this.nextElementSibling.hidden=false"/>
+        <span class="ct-brandTextFallback" hidden>{{ BRAND_NAME }}</span>
       </a>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
@@ -112,7 +113,11 @@
               <div class="ag-eu-grid">
                 {% for c in NAV_EUROPE_COUNTRIES %}
                   <a class="ag-eu-link" href="{{ URL_COUNTRY(CURRENT_LANG, c.slug) if URL_COUNTRY is defined else (_lang_prefix ~ '/' ~ c.slug) }}">
-                    <img class="Flag" src="{{ c.flagUrl }}" alt="{{ c.name }} flag" loading="lazy"/>
+                    {% set flag_emoji = c.flagEmoji if c.flagEmoji is defined and c.flagEmoji else "🌍" %}
+                    <span class="FlagFallback" {% if c.flagUrl %}hidden{% endif %}>{{ flag_emoji }}</span>
+                    {% if c.flagUrl %}
+                      <img class="Flag" src="{{ c.flagUrl }}" alt="{{ c.name }} flag" loading="lazy" onerror="this.hidden=true;this.previousElementSibling.hidden=false"/>
+                    {% endif %}
                     <span>{{ c.name }}</span>
                   </a>
                 {% endfor %}
@@ -183,7 +188,8 @@
     <div class="ct-footerMain">
       <div class="ct-footerIntro">
         <div class="ct-footerBrand ct-footerLogo">
-          <img src="{{ url_for('static', filename='img/soniccity-logo.png') }}?v={{ ASSET_VER }}" alt="{{ BRAND_NAME }}" width="184" height="50"/>
+          <img src="{{ url_for('static', filename='img/soniccity-logo.png') }}?v={{ ASSET_VER }}" alt="{{ BRAND_NAME }}" width="184" height="50" onerror="this.hidden=true;this.nextElementSibling.hidden=false"/>
+          <span class="ct-brandTextFallback" hidden>{{ BRAND_NAME }}</span>
         </div>
         <p class="ct-footerMuted mb-0">{{ T["footer_tagline"] }}</p>
         <a class="ct-footerMapBtn" href="{{ NAV_MAP_URL }}">{{ T["cta_open_map"] }}</a>

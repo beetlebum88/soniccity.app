@@ -317,7 +317,7 @@
           <article class="ux-guideCard ux-cityGuideCard">
             <a class="ux-cardImageLink" href="{{ route_prefix }}{{ c.countrySlug }}/{{ c.citySlug }}" aria-label="{{ T['common_open'] }} {{ c.name }}">
               <div class="ux-cardImageWrap">
-              <img src="/media/city/{{ lang }}/{{ c.countrySlug }}/{{ c.citySlug }}" alt="{{ c.name }}" loading="lazy" decoding="async" onerror="this.remove()"/>
+              <img src="/media/city/en/{{ c.countrySlug }}/{{ c.citySlug }}" alt="{{ c.name }}" loading="lazy" decoding="async" onerror="this.remove()"/>
               <div class="ux-cardFallback"><span>{{ c.name }}</span></div>
               </div>
             </a>
@@ -351,7 +351,7 @@
           <article class="ux-guideCard ux-placeGuideCard">
             <a class="ux-cardImageLink" href="{{ route_prefix }}{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}" aria-label="{{ T['common_open'] }} {{ p.name }}">
               <div class="ux-cardImageWrap">
-                <img src="/media/place/{{ lang }}/{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}" alt="{{ p.name }}" loading="lazy" decoding="async" onerror="this.remove()"/>
+                <img src="/media/place/en/{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}" alt="{{ p.name }}" loading="lazy" decoding="async" onerror="this.remove()"/>
                 <div class="ux-cardFallback"><span>{{ p.name }}</span></div>
               </div>
             </a>
@@ -430,7 +430,11 @@
                   {% for c in NAV_EUROPE_COUNTRIES %}
                     {% if c.slug in group.slugs %}
                       <a class="ct-countryPill" href="{{ '/' ~ c.slug if page_lang_slug == 'en' else '/' ~ page_lang_slug ~ '/' ~ c.slug }}">
-                        <img class="Flag" src="{{ c.flagUrl }}" alt="{{ c.name }} flag" loading="lazy"/>
+                        {% set flag_emoji = c.flagEmoji if c.flagEmoji is defined and c.flagEmoji else "🌍" %}
+                        <span class="FlagFallback" {% if c.flagUrl %}hidden{% endif %}>{{ flag_emoji }}</span>
+                        {% if c.flagUrl %}
+                          <img class="Flag" src="{{ c.flagUrl }}" alt="{{ c.name }} flag" loading="lazy" onerror="this.hidden=true;this.previousElementSibling.hidden=false"/>
+                        {% endif %}
                         <span>{{ c.name }}</span>
                       </a>
                     {% endif %}

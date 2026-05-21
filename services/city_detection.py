@@ -150,6 +150,7 @@ def detect_nearby_cities(
             "countrySlug": country_slug,
             "countryCode": country.get("code"),
             "flag": country.get("flagUrl"),
+            "flagEmoji": country.get("flagEmoji") or "🌍",
             "citySlug": city_slug,
             "url": city_url(lang, country_slug, city_slug) if country_slug and city_slug else "",
         }

@@ -5,6 +5,21 @@
     return value == null || value === "" ? (fallback ?? key) : value;
   }
 
+  function escapeHtml(s) {
+    return String(s || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function flagMarkup(item) {
+    const emoji = escapeHtml(item?.flagEmoji || "🌍");
+    if (!item?.flag) return `<span class="FlagFallback">${emoji}</span>`;
+    return `<span class="FlagFallback" hidden>${emoji}</span><img class="Flag" src="${escapeHtml(item.flag)}" alt="" loading="lazy" onerror="this.hidden=true;this.previousElementSibling.hidden=false"/>`;
+  }
+
   function csrfToken() {
     const meta = document.querySelector('meta[name="csrf-token"]');
     return (window.AG_CSRF_TOKEN || meta?.getAttribute("content") || "").trim();
@@ -100,7 +115,7 @@
     dd.hidden = false;
     dd.innerHTML = items
       .map((x) => {
-        const flag = x.flag ? `<img class="Flag" src="${x.flag}" alt="" loading="lazy"/>` : "";
+        const flag = flagMarkup(x);
         const metaText =
           x.type === "city"
             ? (x.countryName || "")

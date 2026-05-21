@@ -233,7 +233,11 @@
         {% for c in NAV_EUROPE_COUNTRIES[:18] %}
           {% if c.slug != country.slug %}
             <a class="ct-countryPill" href="{{ '/' ~ c.slug if page_lang_slug == 'en' else '/' ~ page_lang_slug ~ '/' ~ c.slug }}">
-              <img class="Flag" src="{{ c.flagUrl }}" alt="{{ c.name }} flag" loading="lazy"/>
+              {% set flag_emoji = c.flagEmoji if c.flagEmoji is defined and c.flagEmoji else "🌍" %}
+              <span class="FlagFallback" {% if c.flagUrl %}hidden{% endif %}>{{ flag_emoji }}</span>
+              {% if c.flagUrl %}
+                <img class="Flag" src="{{ c.flagUrl }}" alt="{{ c.name }} flag" loading="lazy" onerror="this.hidden=true;this.previousElementSibling.hidden=false"/>
+              {% endif %}
               <span>{{ c.name }}</span>
             </a>
           {% endif %}

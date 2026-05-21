@@ -89,6 +89,12 @@ function escapeHtml(s) {
     .replaceAll("'", "&#039;");
 }
 
+function flagMarkup(item) {
+  const emoji = escapeHtml(item?.flagEmoji || "🌍");
+  if (!item?.flag) return `<span class="FlagFallback">${emoji}</span>`;
+  return `<span class="FlagFallback" hidden>${emoji}</span><img class="Flag" src="${escapeHtml(item.flag)}" alt="" loading="lazy" onerror="this.hidden=true;this.previousElementSibling.hidden=false"/>`;
+}
+
 function cityDisplayName(city) {
   return String(city?.displayName || city?.localizedName || city?.name || "").trim();
 }
@@ -4328,7 +4334,7 @@ function renderCitiesList(found) {
     li.className = "ag-cityRow";
     const btn = document.createElement("button");
     btn.className = `ag-cityListBtn ${selectedCityMatches(c) ? "is-selected" : ""}`;
-    const flag = c.flag ? `<img class="Flag" src="${c.flag}" alt="" loading="lazy"/>` : "";
+    const flag = flagMarkup(c);
     const countryLabel = countryDisplayName(c);
     const cityLabel = cityDisplayName(c);
     const distanceText = Number.isFinite(Number(c.distKm)) ? `≈ ${Number(c.distKm).toFixed(1)} km` : "";
