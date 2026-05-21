@@ -5718,18 +5718,18 @@ def mail_log_body(body: str) -> str:
     return body
 
 
-def send_site_notification(subject: str, body: str, *, reply_to: str = "") -> bool:
-    """Send owner notifications, with a JSONL fallback so submissions are never lost."""
-    to_email = CONTACT_EMAIL
-    sent = False
-    message = EmailMessage()
-    message["Subject"] = clean_plain_text(subject, 160)
-    message["From"] = SMTP_FROM or CONTACT_EMAIL
-    message["To"] = to_email
-    if reply_to and is_valid_email(reply_to):
-        message["Reply-To"] = reply_to
-    message.set_content(body)
+def _sendmail_path() -> str:
+    found = shutil.which("sendmail")
+    if found:
+        return found
+    fallback = Path("/usr/sbin/sendmail")
+    return str(fallback) if fallback.exists() else ""
 
+
+def send_email_message(message: EmailMessage, *, subject: str, log_body: str, to_email: str) -> Tuple[bool, str]:
+    """Send an email via configured SMTP or local sendmail, with JSONL logging."""
+    sent = False
+    status = "not_configured"
     if SMTP_HOST:
         try:
             with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=12) as smtp:
@@ -5738,12 +5738,51 @@ def send_site_notification(subject: str, body: str, *, reply_to: str = "") -> bo
                 if SMTP_USERNAME and SMTP_PASSWORD:
                     smtp.login(SMTP_USERNAME, SMTP_PASSWORD)
                 smtp.send_message(message)
-            sent = True
+            return True, "sent_smtp"
         except Exception as exc:
-            append_mail_notification_log(f"MAIL SEND FAILED: {subject}", f"{mail_log_body(body)}\n\nError: {exc}", to_email)
+            status = f"smtp_failed: {clean_plain_text(str(exc), 220)}"
+            append_mail_notification_log(f"MAIL SEND FAILED: {subject}", f"{mail_log_body(log_body)}\n\nError: {exc}", to_email)
+
+    sendmail = _sendmail_path()
+    if sendmail:
+        try:
+            proc = subprocess.run(
+                [sendmail, "-t", "-oi"],
+                input=message.as_bytes(),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=15,
+                check=False,
+            )
+            if proc.returncode == 0:
+                return True, "sent_sendmail"
+            err = proc.stderr.decode("utf-8", "replace").strip()
+            status = f"sendmail_failed: {clean_plain_text(err or str(proc.returncode), 220)}"
+            append_mail_notification_log(f"MAIL SEND FAILED: {subject}", f"{mail_log_body(log_body)}\n\nError: {err or proc.returncode}", to_email)
+        except Exception as exc:
+            status = f"sendmail_failed: {clean_plain_text(str(exc), 220)}"
+            append_mail_notification_log(f"MAIL SEND FAILED: {subject}", f"{mail_log_body(log_body)}\n\nError: {exc}", to_email)
 
     if not sent:
-        append_mail_notification_log(subject, mail_log_body(body), to_email)
+        append_mail_notification_log(subject, mail_log_body(log_body), to_email)
+    return False, status
+
+
+def send_site_notification_result(subject: str, body: str, *, reply_to: str = "") -> Tuple[bool, str]:
+    """Send owner notifications, with a JSONL fallback so submissions are never lost."""
+    to_email = CONTACT_EMAIL
+    message = EmailMessage()
+    message["Subject"] = clean_plain_text(subject, 160)
+    message["From"] = SMTP_FROM or CONTACT_EMAIL
+    message["To"] = to_email
+    if reply_to and is_valid_email(reply_to):
+        message["Reply-To"] = reply_to
+    message.set_content(body)
+    return send_email_message(message, subject=subject, log_body=body, to_email=to_email)
+
+
+def send_site_notification(subject: str, body: str, *, reply_to: str = "") -> bool:
+    sent, _status = send_site_notification_result(subject, body, reply_to=reply_to)
     return sent
 
 
@@ -5771,6 +5810,23 @@ def save_subscription_message(*, name: str, email: str, source_page: str) -> Dic
             return existing
     cms_insert("subscribers", row)
     return row
+
+
+def update_subscription_notification_status(subscriber_id: str, *, sent: bool, status: str) -> Dict[str, Any]:
+    rows = cms_collection_rows("subscribers")
+    updated: Dict[str, Any] = {}
+    now = utc_now_iso()
+    for item in rows:
+        if str(item.get("id") or "") == str(subscriber_id):
+            item["emailNotificationSent"] = bool(sent)
+            item["emailNotificationStatus"] = clean_plain_text(status or ("sent" if sent else "failed"), 260)
+            item["emailNotificationAt"] = now
+            item["updatedAt"] = now
+            updated = item
+            break
+    if updated:
+        save_cms_collection_rows("subscribers", rows)
+    return updated
 
 
 def save_contact_message(*, name: str, email: str, message_text: str, source_page: str) -> Dict[str, Any]:
@@ -6258,20 +6314,8 @@ def send_user_email(to_email: str, subject: str, text_body: str, html_body: str 
     if html_body:
         message.add_alternative(html_body, subtype="html")
 
-    sent = False
-    if SMTP_HOST:
-        try:
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=12) as smtp:
-                if SMTP_USE_TLS:
-                    smtp.starttls()
-                if SMTP_USERNAME and SMTP_PASSWORD:
-                    smtp.login(SMTP_USERNAME, SMTP_PASSWORD)
-                smtp.send_message(message)
-            sent = True
-        except Exception as exc:
-            append_mail_notification_log(f"MAIL SEND FAILED: {subject}", f"{mail_log_body(text_body)}\n\nError: {exc}", to_email)
+    sent, _status = send_email_message(message, subject=subject, log_body=text_body, to_email=to_email)
     if not sent:
-        append_mail_notification_log(subject, mail_log_body(text_body), to_email)
         if REQUIRE_SMTP_FOR_EMAIL:
             return False
     return sent or not REQUIRE_SMTP_FOR_EMAIL
@@ -9946,15 +9990,27 @@ def api_subscribe():
         [
             "New SonicCity subscription",
             "",
+            f"Submission ID: {row.get('id') or '-'}",
             f"Name: {row.get('name') or '-'}",
             f"Email: {row.get('email')}",
             f"Source page: {row.get('source') or '-'}",
             f"Language: {row.get('language') or '-'}",
             f"Time: {row.get('subscribedAt') or utc_now_iso()}",
+            f"IP: {row.get('ip') or '-'}",
+            f"User-Agent: {row.get('userAgent') or '-'}",
         ]
     )
-    sent = send_site_notification("New SonicCity subscription", body, reply_to=email)
-    return jsonify({"ok": True, "sent": bool(sent)})
+    sent, delivery_status = send_site_notification_result("New SonicCity subscription", body, reply_to=email)
+    row = update_subscription_notification_status(row.get("id") or "", sent=sent, status=delivery_status) or row
+    if not sent:
+        return jsonify({
+            "ok": False,
+            "saved": True,
+            "sent": False,
+            "error": "Subscription saved, but email delivery is not configured.",
+            "deliveryStatus": delivery_status,
+        }), 503
+    return jsonify({"ok": True, "saved": True, "sent": bool(sent), "deliveryStatus": delivery_status})
 
 
 @app.post("/api/auth/register")
@@ -13707,6 +13763,7 @@ def admin_subscription_rows(limit: int = 250) -> List[Dict[str, Any]]:
             "name": item.get("name") or "",
             "language": item.get("language") or "",
             "sourcePage": item.get("sourcePage") or item.get("source") or "",
+            "notification": "Sent" if item.get("emailNotificationSent") else (item.get("emailNotificationStatus") or "Not sent"),
             "status": item.get("status") or "pending",
             "ip": item.get("ip") or "",
             "userAgent": clean_plain_text(item.get("userAgent") or "", 180),
@@ -14304,7 +14361,7 @@ def admin_cms_section_response(section: str) -> Response:
             table = admin_table([("name", "Form"), ("language", "Lang"), ("source", "Source"), ("status", "Status"), ("createdAt", "Created")], admin_cms_store_table_rows("subscriptionForms", ["name", "language", "source", "status", "createdAt"], limit=admin_table_source_limit()), title="Subscription forms", total=len(cms_collection_rows("subscriptionForms")))
         else:
             table = admin_table(
-                [("submittedAt", "Date / time"), ("name", "Name"), ("email", "Email"), ("language", "Lang"), ("sourcePage", "Source page"), ("status", "Status"), ("ip", "IP"), ("userAgent", "User agent")],
+                [("submittedAt", "Date / time"), ("name", "Name"), ("email", "Email"), ("language", "Lang"), ("sourcePage", "Source page"), ("notification", "Email notification"), ("status", "Status"), ("ip", "IP"), ("userAgent", "User agent")],
                 admin_subscription_rows(limit=admin_table_source_limit()),
                 title="Subscribers",
                 total=len(cms_collection_rows("subscribers")),

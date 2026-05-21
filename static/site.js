@@ -227,7 +227,7 @@
         if (subscribeFeedback) subscribeFeedback.textContent = tr("subscription_success", "Thank you. We saved your request.");
         setTimeout(() => hideSubscribe(true), 900);
       } catch (err) {
-        if (subscribeFeedback) subscribeFeedback.textContent = tr("subscription_error", "Please check your email and try again.");
+        if (subscribeFeedback) subscribeFeedback.textContent = err?.message || tr("subscription_error", "Please check your email and try again.");
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }
