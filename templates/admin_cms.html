@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% macro admin_cell(key, value) -%}
+  {% set text = value|string %}
+  {% if key in ["url", "source", "sourcePage", "target", "manager"] and (text.startswith("/") or text.startswith("http")) %}
+    <a href="{{ text }}" {% if key in ["url", "source", "sourcePage"] %}target="_blank" rel="noopener"{% endif %}>{{ text }}</a>
+  {% elif key == "path" %}
+    <code>{{ text }}</code>
+  {% elif key == "actions" %}
+    {{ value|safe }}
+  {% elif key == "rating" and ("cms-starMeter" in text or "cms-starsText" in text) %}
+    {{ value|safe }}
+  {% elif key in ["status", "seo", "seoText", "faqStatus", "audio", "sitemap", "indexing", "active", "enabled", "issues"] %}
+    <span class="cms-badge">{{ text }}</span>
+  {% else %}
+    {{ text }}
+  {% endif %}
+{%- endmacro %}
+
+{% block header_right %}
+  <form method="post" action="/admin/logout" class="cms-logout">
+    <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+    <button class="cms-btn cms-btn-soft" type="submit">Logout</button>
+  </form>
+{% endblock %}
+
+{% block content %}
+  <section class="cms-shell" aria-label="{{ title }}">
+    <aside class="cms-sidebar">
+      <a class="cms-brand" href="/admin">
+        <strong>Audio Guide CMS</strong>
+        <span>{{ BRAND_NAME }}</span>
+      </a>
+      <nav class="cms-nav" aria-label="Admin navigation">
+        <a class="cms-nav-dashboard {% if active_path == 'dashboard' %}is-active{% endif %}" href="/admin">Dashboard</a>
+        {% for group in admin_groups %}
+          <section class="cms-nav-group">
+            <h2>{{ group.label }}</h2>
+            {% for item in group["items"] %}
+              <a href="{{ item.url }}" class="{% if item.active %}is-active{% endif %}">{{ item.label }}</a>
+            {% endfor %}
+          </section>
+        {% endfor %}
+      </nav>
+    </aside>
+
+    <main class="cms-main">
+      <header class="cms-topbar">
+        <div>
+          <span class="cms-eyebrow">Production CMS</span>
+          <h1>{{ title }}</h1>
+          <p>{{ subtitle }}</p>
+        </div>
+        <div class="cms-top-actions">
+          <form method="get" action="{{ request.path }}" class="cms-search" data-admin-filter>
+            <input type="hidden" name="pageSize" value="{{ table.pagination.pageSize if table and table.pagination else 50 }}">
+            <input type="search" name="q" value="{{ request.args.get('q','') }}" placeholder="Search this section">
+            <button class="cms-btn cms-btn-soft" type="submit">Search</button>
+          </form>
+          <a class="cms-btn cms-btn-primary" href="/admin/blog/articles/new">New article</a>
+          <a class="cms-btn cms-btn-soft" href="/admin/pages/edit">New page block</a>
+          <a class="cms-btn cms-btn-soft" href="{{ NAV_HOME_URL }}" target="_blank" rel="noopener">View site</a>
+        </div>
+      </header>
+
+      {% if admin_msg %}
+        <div class="cms-alert cms-alert-{{ admin_msg_kind }}">{{ admin_msg }}</div>
+      {% endif %}
+
+      {% if metrics %}
+        <section class="cms-metrics" aria-label="Metrics">
+          {% for metric in metrics %}
+            <article>
+              <span>{{ metric.label }}</span>
+              <strong>{{ metric.value }}</strong>
+              <small>{{ metric.note }}</small>
+            </article>
+          {% endfor %}
+        </section>
+      {% endif %}
+
+      {% if active_path == "dashboard" %}
+        <section class="cms-dashboard-grid">
+          <article class="cms-card">
+            <div class="cms-card-head">
+              <h2>Content structure</h2>
+              <a href="/admin/pages/all">Open pages</a>
+            </div>
+            <div class="cms-module-list">
+              {% for group in admin_groups %}
+                <div>
+                  <strong>{{ group.label }}</strong>
+                  <span>{{ group["items"]|length }} tools</span>
+                </div>
+              {% endfor %}
+            </div>
+          </article>
+          <article class="cms-card">
+            <div class="cms-card-head">
+              <h2>Recent actions</h2>
+              <a href="/admin/logs/actions">All logs</a>
+            </div>
+            <div class="cms-recent">
+              {% for row in recent_actions %}
+                <a href="/admin/logs/actions">
+                  <strong>{{ row.action }}</strong>
+                  <span>{{ row.entityName }} · {{ row.iso }}</span>
+                </a>
+              {% else %}
+                <p>No admin actions logged yet.</p>
+              {% endfor %}
+            </div>
+          </article>
+        </section>
+      {% endif %}
+
+      {% for form in forms %}
+        {% if form.type == "robots" %}
+          <section class="cms-card">
+            <div class="cms-card-head"><h2>Robots.txt editor</h2><a href="/robots.txt" target="_blank" rel="noopener">Open robots.txt</a></div>
+            <form method="post" action="/admin/robots" class="cms-form">
+              <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+              <label class="cms-full"><span>robots.txt</span><textarea class="cms-code" name="robots_text" rows="20">{{ form.value }}</textarea></label>
+              <button class="cms-btn cms-btn-primary" type="submit">Save robots.txt</button>
+            </form>
+          </section>
+        {% elif form.type == "redirect" %}
+          <section class="cms-card">
+            <div class="cms-card-head"><h2>Add redirect</h2><span>301/302/307/308 with loop prevention on save.</span></div>
+            <form method="post" action="/admin/redirects" class="cms-form cms-form-grid">
+              <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+              <label><span>Source URL</span><input name="source" placeholder="/old-url" required></label>
+              <label><span>Target URL</span><input name="target" placeholder="/new-url or https://..." required></label>
+              <label><span>Code</span><select name="code"><option>301</option><option>302</option><option>307</option><option>308</option></select></label>
+              <label><span>Language</span><select name="lang">{% for l in NAV_LANGS %}<option value="{{ l.slug }}">{{ l.slug|upper }}</option>{% endfor %}</select></label>
+              <label class="cms-full"><span>Notes</span><input name="notes"></label>
+              <button class="cms-btn cms-btn-primary" type="submit">Save redirect</button>
+            </form>
+          </section>
+        {% elif form.type == "audioUpload" %}
+          <section class="cms-card">
+            <div class="cms-card-head"><h2>Upload / replace audio</h2><span>MP3, WAV, M4A saved in managed audio storage.</span></div>
+            <form method="post" action="/admin/audio/files" enctype="multipart/form-data" class="cms-form cms-form-grid">
+              <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+              <input type="hidden" name="action" value="upload">
+              <label><span>Entity</span><select name="entity_type"><option value="city">City</option><option value="place">Place</option></select></label>
+              <label><span>Country</span><input name="country_slug" placeholder="spain" required></label>
+              <label><span>City</span><input name="city_slug" placeholder="valencia" required></label>
+              <label><span>Place</span><input name="place_slug" placeholder="valencia-cathedral"></label>
+              <label><span>Language</span><select name="lang">{% for l in NAV_LANGS %}<option value="{{ l.slug }}">{{ l.slug|upper }}</option>{% endfor %}</select></label>
+              <label><span>Voice</span><select name="voice_gender"><option value="female">Female</option><option value="male">Male</option></select></label>
+              <label><span>Section ID</span><input name="section_id" placeholder="s01_c01" required></label>
+              <label class="cms-full"><span>Audio file</span><input type="file" name="audio_file" accept=".mp3,.wav,.m4a" required></label>
+              <button class="cms-btn cms-btn-primary" type="submit">Upload audio</button>
+            </form>
+          </section>
+        {% elif form.type == "mediaUpload" %}
+          <section class="cms-card">
+            <div class="cms-card-head"><h2>Upload media</h2><span>Images are indexed as thumbnails in list pages.</span></div>
+            <form method="post" action="/admin/media/images" enctype="multipart/form-data" class="cms-form cms-form-grid">
+              <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+              <input type="hidden" name="action" value="upload">
+              <label class="cms-full"><span>File</span><input type="file" name="media_file" accept=".png,.jpg,.jpeg,.webp,.gif,.mp3,.wav,.m4a" required></label>
+              <label class="cms-full"><span>Alt text / caption</span><input name="alt" placeholder="Describe the image"></label>
+              <button class="cms-btn cms-btn-primary" type="submit">Upload media</button>
+            </form>
+          </section>
+        {% elif form.type == "settings" %}
+          <section class="cms-card">
+            <div class="cms-card-head"><h2>Site settings</h2><span>General, audio, map and SEO configuration.</span></div>
+            <form method="post" action="/admin/settings/general" class="cms-form cms-form-grid">
+              <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+              <label><span>Site name</span><input name="siteName" value="{{ form.value.siteName }}"></label>
+              <label><span>Site URL</span><input name="siteUrl" value="{{ form.value.siteUrl }}"></label>
+              <label><span>Default language</span><select name="defaultLanguage">{% for l in NAV_LANGS %}<option value="{{ l.slug }}" {% if form.value.defaultLanguage == l.slug %}selected{% endif %}>{{ l.label }}</option>{% endfor %}</select></label>
+              <label><span>Default voice</span><select name="defaultVoiceGender"><option value="female" {% if form.value.defaultVoiceGender == "female" %}selected{% endif %}>Female</option><option value="male" {% if form.value.defaultVoiceGender == "male" %}selected{% endif %}>Male</option></select></label>
+              <label><span>Audio storage path</span><input name="audioStoragePath" value="{{ form.value.audioStoragePath }}"></label>
+              <label><span>Map provider</span><input name="mapProvider" value="{{ form.value.mapProvider }}"></label>
+              <label><span>Routing provider</span><input name="routingProvider" value="{{ form.value.routingProvider }}"></label>
+              <label class="cms-check"><input type="checkbox" name="sitemapEnabled" value="1" {% if form.value.sitemapEnabled %}checked{% endif %}> Sitemap enabled</label>
+              <label class="cms-check"><input type="checkbox" name="robotsManaged" value="1" {% if form.value.robotsManaged %}checked{% endif %}> Robots managed</label>
+              <button class="cms-btn cms-btn-primary" type="submit">Save settings</button>
+            </form>
+          </section>
+        {% elif form.type == "uiTranslation" %}
+          <section class="cms-card">
+            <div class="cms-card-head">
+              <h2>Edit UI translation</h2>
+              <span>Saved in <code>data/admin/translations.json</code> and used by the public site through <code>T[...]</code>.</span>
+            </div>
+            <form method="post" action="/admin/translations/ui" class="cms-form cms-form-grid">
+              <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+              <label><span>Key</span><input name="key" value="{{ form.row.key }}" required></label>
+              <label><span>Language</span><select name="language">
+                {% for l in NAV_LANGS %}
+                  <option value="{{ l.slug }}" {% if form.row.language == l.slug %}selected{% endif %}>{{ l.label }} ({{ l.slug|upper }})</option>
+                {% endfor %}
+              </select></label>
+              <label><span>Status</span><select name="status">
+                {% for s in ["missing","draft","translated","reviewed","machine_draft","human_draft","published"] %}
+                  <option value="{{ s }}" {% if form.row.status == s %}selected{% endif %}>{{ s|replace("_"," ")|title }}</option>
+                {% endfor %}
+              </select></label>
+              <label class="cms-full"><span>English source / description</span><input name="description" value="{{ form.row.description }}"></label>
+              <label class="cms-full"><span>Translation value</span><textarea name="value" rows="4" required>{{ form.row.value }}</textarea></label>
+              <button class="cms-btn cms-btn-primary" type="submit">Save translation</button>
+            </form>
+          </section>
+        {% endif %}
+      {% endfor %}
+
+      {% for panel in panels %}
+        <article class="cms-card">
+          <div class="cms-card-head"><h2>{{ panel.title }}</h2></div>
+          <p>{{ panel.body }}</p>
+        </article>
+      {% endfor %}
+
+      {% if table and table.columns %}
+        <section class="cms-card cms-table-card">
+          <div class="cms-card-head">
+            <div>
+              <h2>{{ table.title or "Records" }}</h2>
+              {% if table.pagination %}
+                <span>{{ table.pagination.from }}–{{ table.pagination.to }} of {{ table.pagination.total }} · Page {{ table.pagination.page }} / {{ table.pagination.totalPages }} · {{ table.pagination.pageSize }} per page</span>
+              {% endif %}
+            </div>
+            <form method="get" action="{{ request.path }}" class="cms-filters" data-admin-filter>
+              <input type="hidden" name="page" value="1">
+              <input type="hidden" name="pageSize" value="{{ table.pagination.pageSize if table.pagination else 50 }}">
+              <input name="q" value="{{ request.args.get('q','') }}" placeholder="Search">
+              <select name="status">
+                <option value="">All status</option>
+                {% for s in ["published","draft","pending","approved","rejected","failed","ready"] %}
+                  <option value="{{ s }}" {% if request.args.get('status') == s %}selected{% endif %}>{{ s|title }}</option>
+                {% endfor %}
+              </select>
+              <select name="lang">
+                <option value="">All languages</option>
+                {% for l in NAV_LANGS %}<option value="{{ l.slug }}" {% if request.args.get('lang') == l.slug %}selected{% endif %}>{{ l.slug|upper }}</option>{% endfor %}
+              </select>
+              <select name="sort">
+                <option value="">Default sort</option>
+                <option value="title" {% if request.args.get('sort') == 'title' %}selected{% endif %}>Title A-Z</option>
+                <option value="-updatedAt" {% if request.args.get('sort') == '-updatedAt' %}selected{% endif %}>Updated newest</option>
+                <option value="status" {% if request.args.get('sort') == 'status' %}selected{% endif %}>Status</option>
+              </select>
+              <button class="cms-btn cms-btn-soft" type="submit">Apply</button>
+            </form>
+          </div>
+
+          <form class="cms-bulk" method="post" action="{{ request.path }}">
+            <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+            <select name="bulk_action" aria-label="Bulk action">
+              <option value="">Bulk actions</option>
+              <option value="publish">Publish</option>
+              <option value="unpublish">Unpublish</option>
+              <option value="noindex">Set noindex</option>
+              <option value="sitemap">Add to sitemap</option>
+              <option value="archive">Archive</option>
+            </select>
+            <button class="cms-btn cms-btn-soft" type="submit">Apply to selected</button>
+          </form>
+
+          <div class="cms-table-wrap">
+            <table class="cms-table">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" aria-label="Select all"></th>
+                  {% for col in table.columns %}<th>{{ col.label }}</th>{% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in table.rows %}
+                  <tr>
+                    <td><input type="checkbox" name="selected" value="{{ row.id or row.slug or row.url or loop.index }}" aria-label="Select row"></td>
+                    {% for col in table.columns %}
+                      <td>{{ admin_cell(col.key, row.get(col.key, "—")) }}</td>
+                    {% endfor %}
+                  </tr>
+                {% else %}
+                  <tr><td colspan="{{ table.columns|length + 1 }}">{{ table.empty }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if table.pagination %}
+            <nav class="cms-pagination" aria-label="Table pagination">
+              <a class="cms-btn cms-btn-soft {% if not table.pagination.hasPrev %}is-disabled{% endif %}" href="{{ table.pagination.firstUrl }}">First</a>
+              <a class="cms-btn cms-btn-soft {% if not table.pagination.hasPrev %}is-disabled{% endif %}" href="{{ table.pagination.prevUrl }}">Previous</a>
+              <span>Page {{ table.pagination.page }} of {{ table.pagination.totalPages }}</span>
+              <a class="cms-btn cms-btn-soft {% if not table.pagination.hasNext %}is-disabled{% endif %}" href="{{ table.pagination.nextUrl }}">Next</a>
+              <a class="cms-btn cms-btn-soft {% if not table.pagination.hasNext %}is-disabled{% endif %}" href="{{ table.pagination.lastUrl }}">Last</a>
+              <label>Rows
+                <select onchange="if(this.value) window.location.href=this.value">
+                  <option value="{{ table.pagination.pageSizeUrl25 }}" {% if table.pagination.pageSize == 25 %}selected{% endif %}>25</option>
+                  <option value="{{ table.pagination.pageSizeUrl50 }}" {% if table.pagination.pageSize == 50 %}selected{% endif %}>50</option>
+                  <option value="{{ table.pagination.pageSizeUrl100 }}" {% if table.pagination.pageSize == 100 %}selected{% endif %}>100</option>
+                </select>
+              </label>
+            </nav>
+          {% endif %}
+        </section>
+      {% endif %}
+    </main>
+  </section>
+{% endblock %}

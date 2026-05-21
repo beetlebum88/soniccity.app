@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block header_right %}
+  <form method="post" action="/admin/logout"><input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}"><button class="cms-btn cms-btn-soft" type="submit">Logout</button></form>
+{% endblock %}
+
+{% block content %}
+  <section class="cms-shell cms-editor-shell">
+    <aside class="cms-sidebar">
+      <a class="cms-brand" href="/admin"><strong>Audio Guide CMS</strong><span>{{ BRAND_NAME }}</span></a>
+      <nav class="cms-nav" aria-label="Admin navigation">
+        <a class="cms-nav-dashboard" href="/admin">Dashboard</a>
+        {% for group in admin_groups %}
+          <section class="cms-nav-group">
+            <h2>{{ group.label }}</h2>
+            {% for item in group["items"] %}<a href="{{ item.url }}" class="{% if item.active %}is-active{% endif %}">{{ item.label }}</a>{% endfor %}
+          </section>
+        {% endfor %}
+      </nav>
+    </aside>
+
+    <main class="cms-main">
+      <header class="cms-topbar">
+        <div>
+          <span class="cms-eyebrow">Blog article</span>
+          <h1>{{ "New blog article" if not post.id else post.title }}</h1>
+          <p>Full HTML editor, SEO, comments, likes, ratings and internal link-ready article fields.</p>
+        </div>
+        <div class="cms-top-actions">
+          <a class="cms-btn cms-btn-soft" href="/admin/blog/articles">Back to articles</a>
+          {% if post.slug %}<a class="cms-btn cms-btn-soft" href="{{ URL_BLOG_POST(post) }}" target="_blank" rel="noopener">Open public</a>{% endif %}
+        </div>
+      </header>
+
+      {% if error %}<div class="cms-alert cms-alert-error">{{ error }}</div>{% endif %}
+
+      <form method="post" enctype="multipart/form-data" class="cms-card cms-editor-form" data-cms-editor-form>
+        <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+        <div class="cms-card-head">
+          <div><h2>Article editor</h2><span>Slug auto-generates from H1/title until manually edited.</span></div>
+          <button class="cms-btn cms-btn-primary" type="submit">Save article</button>
+        </div>
+
+        <div class="cms-form-grid">
+          <label class="cms-full"><span>Title</span><input id="blogTitleInput" name="title" value="{{ post.title }}" required></label>
+          <label class="cms-full"><span>H1</span><input id="pageH1Input" name="h1" value="{{ post.h1 or post.title }}" required></label>
+          <label><span>Slug</span><input id="contentSlugInput" name="slug" value="{{ post.slug }}" required><input type="hidden" id="slugManualInput" name="slug_manually_edited" value="{{ '1' if post.slugManuallyEdited else '0' }}"></label>
+          <label><span>Language</span><select name="lang">{% for l in NAV_LANGS %}<option value="{{ l.slug }}" {% if post.lang == l.slug %}selected{% endif %}>{{ l.label }}</option>{% endfor %}</select></label>
+          <label><span>Status</span><select name="status"><option value="draft" {% if post.status == "draft" %}selected{% endif %}>Draft</option><option value="published" {% if post.status == "published" %}selected{% endif %}>Published</option><option value="scheduled" {% if post.status == "scheduled" %}selected{% endif %}>Scheduled</option><option value="archived" {% if post.status == "archived" %}selected{% endif %}>Archived</option></select></label>
+          <label><span>Category</span><input name="category" list="blogCategories" value="{{ post.category }}"><datalist id="blogCategories">{% for c in categories %}<option value="{{ c.name }}">{% endfor %}</datalist></label>
+          <label><span>Author</span><input name="author" list="blogAuthors" value="{{ post.author or BRAND_NAME ~ ' Team' }}"><datalist id="blogAuthors">{% for a in authors %}<option value="{{ a.name }}">{% endfor %}</datalist></label>
+          <label class="cms-full"><span>Tags</span><input name="tags" value="{{ post.tags|join(', ') }}" placeholder="Valencia, Audio Guide, Travel"></label>
+          <label class="cms-full"><span>Excerpt</span><textarea name="excerpt" rows="3">{{ post.excerpt }}</textarea></label>
+        </div>
+        <div class="cms-slug-row">
+          <button class="cms-btn cms-btn-soft" id="regenerateSlugBtn" type="button">Regenerate slug from H1</button>
+          <span id="slugUrlPreview">URL preview: /blog/{{ post.slug or "auto-slug" }}</span>
+        </div>
+
+        <nav class="cms-editor-tabs" aria-label="Blog editor tabs">
+          <a href="#content" data-cms-tab="content">Content</a>
+          <a href="#media" data-cms-tab="media">Media</a>
+          <a href="#seo" data-cms-tab="seo">SEO</a>
+          <a href="#comments" data-cms-tab="comments">Comments</a>
+          <a href="#relations" data-cms-tab="relations">Relations</a>
+          <a href="#settings" data-cms-tab="settings">Settings</a>
+        </nav>
+
+        <section id="content" class="cms-editor-panel">
+          <div class="cms-card-head">
+            <div><h2>Article content</h2><span>Visual editor with source HTML mode, tables, links, images, FAQ/CTA blocks and clean paste.</span></div>
+            <label><span>Storage</span><select name="body_editor_mode" id="seoEditorMode"><option value="html" {% if post.bodyEditorMode != "markdown" %}selected{% endif %}>HTML</option><option value="markdown" {% if post.bodyEditorMode == "markdown" %}selected{% endif %}>Markdown</option></select></label>
+          </div>
+          <div data-editor-panel="html">
+            <textarea class="cms-rich-source" data-cms-rich-editor="full" data-editor-label="Blog article" name="body_html_raw" rows="22">{{ post.bodyHtmlRaw }}</textarea>
+          </div>
+          <div data-editor-panel="markdown">
+            <textarea class="cms-code" name="body_markdown" rows="18">{{ post.bodyMarkdown }}</textarea>
+          </div>
+        </section>
+
+        <section id="media" class="cms-editor-panel">
+          <h2>Media</h2>
+          <div class="cms-form-grid">
+            <label class="cms-full"><span>Featured image URL</span><input name="hero_image" value="{{ post.heroImage }}"></label>
+            <label class="cms-full"><span>Upload featured image</span><input type="file" name="hero_upload" accept=".jpg,.jpeg,.png,.webp,.gif"></label>
+          </div>
+        </section>
+
+        <section id="seo" class="cms-editor-panel">
+          <h2>SEO</h2>
+          <div class="cms-form-grid">
+            <label class="cms-full"><span>Meta title</span><input name="meta_title" value="{{ post.metaTitle }}"></label>
+            <label class="cms-full"><span>Meta description</span><textarea name="meta_description" rows="3">{{ post.metaDescription }}</textarea></label>
+            <label class="cms-full"><span>Canonical</span><input name="canonical" value="{{ post.canonical }}"></label>
+            <label><span>Schema type</span><select name="schema_type"><option value="BlogPosting" {% if post.schemaType != "Article" %}selected{% endif %}>BlogPosting</option><option value="Article" {% if post.schemaType == "Article" %}selected{% endif %}>Article</option></select></label>
+            <label class="cms-check"><input type="checkbox" name="robots_index" value="1" {% if post.robotsIndex is not defined or post.robotsIndex %}checked{% endif %}> Index</label>
+            <label class="cms-check"><input type="checkbox" name="robots_follow" value="1" {% if post.robotsFollow is not defined or post.robotsFollow %}checked{% endif %}> Follow</label>
+            <label><span>OG title</span><input name="og_title" value="{{ post.ogTitle }}"></label>
+            <label><span>OG image</span><input name="og_image" value="{{ post.ogImage }}"></label>
+            <label class="cms-full"><span>OG description</span><textarea name="og_description" rows="2">{{ post.ogDescription }}</textarea></label>
+            <label><span>Twitter title</span><input name="twitter_title" value="{{ post.twitterTitle }}"></label>
+            <label><span>Twitter image</span><input name="twitter_image" value="{{ post.twitterImage }}"></label>
+            <label class="cms-full"><span>Twitter description</span><textarea name="twitter_description" rows="2">{{ post.twitterDescription }}</textarea></label>
+          </div>
+        </section>
+
+        <section id="comments" class="cms-editor-panel">
+          <div class="cms-card-head">
+            <div><h2>Comments</h2><span>Moderate comments for this article without leaving the editor.</span></div>
+            <a class="cms-btn cms-btn-soft" href="/admin/comments?q={{ post.id }}">All article comments</a>
+          </div>
+          {% set rows = post_comments|default([]) %}
+          <div class="cms-inlineStats">
+            <span>{{ rows|selectattr("status", "equalto", "pending")|list|length }} pending</span>
+            <span>{{ rows|selectattr("status", "equalto", "approved")|list|length }} approved</span>
+            <span>{{ rows|length }} total</span>
+          </div>
+          <div class="cms-compactList">
+            {% for comment in rows[:8] %}
+              <article>
+                <strong>{{ comment.authorName }}</strong>
+                <span>{{ comment.status|title }} · {{ comment.createdAt }}</span>
+                <p>{{ comment.commentText }}</p>
+                <a href="/admin/comments/{{ comment.id|urlencode }}">Moderate</a>
+              </article>
+            {% else %}
+              <p class="cms-note">No comments for this article yet.</p>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section id="relations" class="cms-editor-panel">
+          <h2>Relations and internal links</h2>
+          <p class="cms-note">TODO: DB-backed related posts/pages picker. For now use the editor internal link button to add city/place/blog links into the article HTML.</p>
+        </section>
+
+        <section id="settings" class="cms-editor-panel">
+          <h2>Publishing settings</h2>
+          <div class="cms-form-grid">
+            <label><span>Published date</span><input name="published_at" value="{{ post.publishedAt }}" placeholder="2026-05-17T12:00:00Z"></label>
+            <label class="cms-check"><input type="checkbox" name="sitemap_included" value="1" {% if post.sitemapIncluded is not defined or post.sitemapIncluded %}checked{% endif %}> Include in sitemap</label>
+          </div>
+        </section>
+
+        <div class="cms-editor-actions">
+          <button class="cms-btn cms-btn-primary" type="submit">Save article</button>
+          <a class="cms-btn cms-btn-soft" href="/admin/blog/articles">Cancel</a>
+        </div>
+      </form>
+    </main>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='admin_cms_editor.js') }}?v={{ ASSET_VER }}" defer></script>
+{% endblock %}

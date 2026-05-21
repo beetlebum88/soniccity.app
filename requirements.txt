@@ -1,0 +1,12 @@
+Flask==3.0.3
+requests==2.32.3
+beautifulsoup4==4.12.3
+pyttsx3==2.99
+edge-tts==7.2.7
+gTTS==2.5.4
+Werkzeug>=3.0.0
+markdown==3.6
+bleach==6.1.0
+gunicorn==23.0.0
+pytest==8.3.4
+python-dotenv==1.0.1

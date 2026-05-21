@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="ux-breadcrumbs">
+    <div class="container">
+      <nav aria-label="Breadcrumb">
+        <a href="{{ NAV_HOME_URL }}">Home</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ title }}</span>
+      </nav>
+    </div>
+  </section>
+
+  <section class="ux-section">
+    <div class="container">
+      <article class="ux-textBlock ux-seoTextBlock">
+        <span class="ux-badge">Page</span>
+        <h1>{{ title }}</h1>
+      </article>
+    </div>
+  </section>
+
+  {% include "_admin_public_content.html" %}
+{% endblock %}

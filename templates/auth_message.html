@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="ux-authMessagePage">
+  <div class="container ux-authMessageCard">
+    <span class="ux-kicker">SonicCity account</span>
+    <h1>{{ title }}</h1>
+    <p>{{ body }}</p>
+    <button class="btn btn-primary ct-primaryBtn" type="button" data-auth-open>{{ action_label }}</button>
+  </div>
+</section>
+{% endblock %}

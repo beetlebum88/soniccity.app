@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="{{ HTML_LANG if HTML_LANG else CURRENT_LANG }}">
+<head>
+  {% set ASSET_VER = "20260521-lang-menu-full" %}
+  {% set _csrf_token = CSRF_TOKEN() if CSRF_TOKEN is defined else '' %}
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="csrf-token" content="{{ _csrf_token }}"/>
+  {% set _seo_title = seo_title if seo_title else BRAND_NAME %}
+  {% set _seo_desc = seo_desc if seo_desc else 'Map-first audio guide for nearby cities.' %}
+  {% set _seo_keywords = seo_keywords if seo_keywords else '' %}
+  {% set _seo_type = seo_type if seo_type else 'website' %}
+  {% set _seo_image = seo_image if seo_image else '/static/img/place-placeholder.svg' %}
+  {% set _seo_robots = seo_robots if seo_robots is defined and seo_robots else (SEO_ROBOTS if SEO_ROBOTS is defined else 'index,follow') %}
+  {% set _lang_prefix = '' if CURRENT_LANG == 'en' else '/' ~ (CURRENT_LANG_PUBLIC if CURRENT_LANG_PUBLIC is defined else CURRENT_LANG) %}
+  {% set _blog_url = URL_BLOG(CURRENT_LANG) if URL_BLOG is defined else (_lang_prefix ~ '/blog') %}
+  {% set _contact_url = URL_CONTACT(CURRENT_LANG) if URL_CONTACT is defined else (_lang_prefix ~ '/contacts/') %}
+  {% if _seo_image.startswith('http') %}
+    {% set _seo_image_abs = _seo_image %}
+  {% else %}
+    {% set _seo_image_abs = request.url_root.rstrip('/') ~ _seo_image %}
+  {% endif %}
+
+  <title>{{ _seo_title }}</title>
+  <meta name="description" content="{{ _seo_desc }}"/>
+  {% if _seo_keywords %}<meta name="keywords" content="{{ _seo_keywords }}"/>{% endif %}
+  <meta name="robots" content="{{ _seo_robots }}"/>
+  <meta name="theme-color" content="#4b7bec"/>
+  <meta name="application-name" content="{{ BRAND_NAME }}"/>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/soniccity-favicon.png') }}?v={{ ASSET_VER }}"/>
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/soniccity-favicon.png') }}?v={{ ASSET_VER }}"/>
+
+  <link rel="canonical" href="{{ SEO_CANONICAL_URL }}"/>
+  {% for alt in SEO_HREFLANG_LINKS %}
+    <link rel="alternate" hreflang="{{ alt.lang }}" href="{{ alt.url }}"/>
+  {% endfor %}
+
+  <meta property="og:type" content="{{ _seo_type }}"/>
+  <meta property="og:site_name" content="{{ BRAND_NAME }}"/>
+  <meta property="og:locale" content="{{ SEO_OG_LOCALE }}"/>
+  <meta property="og:title" content="{{ _seo_title }}"/>
+  <meta property="og:description" content="{{ _seo_desc }}"/>
+  <meta property="og:url" content="{{ SEO_CANONICAL_URL }}"/>
+  <meta property="og:image" content="{{ _seo_image_abs }}"/>
+  {% for alt in SEO_HREFLANG_LINKS %}
+    {% if alt.lang != "x-default" and alt.lang|replace('-', '_') != SEO_OG_LOCALE %}
+      <meta property="og:locale:alternate" content="{{ alt.lang|replace('-', '_') }}"/>
+    {% endif %}
+  {% endfor %}
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="{{ _seo_title }}"/>
+  <meta name="twitter:description" content="{{ _seo_desc }}"/>
+  <meta name="twitter:image" content="{{ _seo_image_abs }}"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Inter+Tight:wght@600;700;800;900&display=swap" rel="stylesheet"/>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='jadoo/assets/css/theme.css') }}?v={{ ASSET_VER }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='audia.css') }}?v={{ ASSET_VER }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='gallery.css') }}?v={{ ASSET_VER }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='redesign.css') }}?v={{ ASSET_VER }}"/>
+  {% if request.path.startswith('/admin') %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_cms.css') }}?v={{ ASSET_VER }}"/>
+  {% endif %}
+
+  {% if use_leaflet %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  {% endif %}
+
+  {% block head_extra %}{% endblock %}
+  {% set _schema_blocked = request.path.startswith('/admin') or request.path.startswith('/account') or request.path.startswith('/login') or request.path.startswith('/verify-email') or request.path.startswith('/reset-password') %}
+  {% if not _schema_blocked %}
+    {% set _seo_schema = seo_schema if seo_schema else {"@context":"https://schema.org","@type":"WebSite","name":_seo_title,"url":SEO_CANONICAL_URL} %}
+    <script type="application/ld+json">{{ _seo_schema|tojson }}</script>
+  {% endif %}
+</head>
+<body class="{{ body_class if body_class else '' }}">
+{% set IS_ADMIN_AREA = request.path.startswith('/admin') %}
+
+{% if not IS_ADMIN_AREA %}
+<header>
+  <nav class="navbar navbar-expand-lg fixed-top ct-navbar">
+    <div class="container">
+      <a class="navbar-brand ag-brand ct-brand ct-brandLogo" href="{{ NAV_HOME_URL }}" aria-label="{{ BRAND_NAME }}">
+        <img src="{{ url_for('static', filename='img/soniccity-logo.png') }}?v={{ ASSET_VER }}" alt="{{ BRAND_NAME }}" width="184" height="50"/>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+              aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ T['nav_toggle'] }}">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse border-top border-lg-0 mt-4 mt-lg-0" id="navbarSupportedContent">
+        <ul class="navbar-nav ms-auto pt-2 pt-lg-0 font-base align-items-lg-center align-items-start">
+          <li class="nav-item px-2 px-xl-2">
+            <a class="nav-link fw-medium" href="{{ NAV_HOME_URL }}#how">{{ T["nav_how"] }}</a>
+          </li>
+          <li class="nav-item px-2 px-xl-2">
+            <a class="nav-link fw-medium" href="{{ NAV_HOME_URL }}#popularCities">{{ T["nav_cities"] }}</a>
+          </li>
+          <li class="nav-item px-2 px-xl-2">
+            <a class="nav-link fw-medium" href="{{ NAV_HOME_URL }}#popularPlaces">{{ T["nav_places"] }}</a>
+          </li>
+          <li class="nav-item px-2 px-xl-2">
+            <a class="nav-link fw-medium" href="{{ _blog_url }}">{{ T["nav_blog"] }}</a>
+          </li>
+          <li class="nav-item dropdown px-2 px-xl-2" id="europeNav">
+            <a class="nav-link dropdown-toggle fw-medium" href="#" id="europeDropdown" role="button"
+               data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">{{ T["nav_countries"] }}</a>
+            <div class="dropdown-menu border-0 shadow-lg p-3 ag-eu-menu" id="europeMenu" aria-labelledby="europeDropdown">
+              <div class="ag-eu-grid">
+                {% for c in NAV_EUROPE_COUNTRIES %}
+                  <a class="ag-eu-link" href="{{ URL_COUNTRY(CURRENT_LANG, c.slug) if URL_COUNTRY is defined else (_lang_prefix ~ '/' ~ c.slug) }}">
+                    <img class="Flag" src="{{ c.flagUrl }}" alt="{{ c.name }} flag" loading="lazy"/>
+                    <span>{{ c.name }}</span>
+                  </a>
+                {% endfor %}
+              </div>
+            </div>
+          </li>
+          <li class="nav-item dropdown px-2 px-xl-2" id="langNav">
+            <a class="nav-link dropdown-toggle fw-medium" href="#" id="langDropdown" role="button"
+               data-bs-toggle="dropdown" aria-expanded="false">{{ (CURRENT_LANG_PUBLIC if CURRENT_LANG_PUBLIC is defined else CURRENT_LANG)|upper }}</a>
+            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg" id="langMenu" aria-labelledby="langDropdown">
+              {% for l in NAV_LANGS %}
+                <li><a class="dropdown-item" href="{{ l.url }}" data-lang="{{ l.slug }}">{{ l.label }}</a></li>
+              {% endfor %}
+            </ul>
+          </li>
+          {% if IS_LOGGED_IN %}
+          <li class="nav-item dropdown px-2 px-xl-2" id="accountNav">
+            <button class="nav-link dropdown-toggle fw-medium ct-authNavBtn" type="button" id="accountDropdown"
+                    data-bs-toggle="dropdown" aria-expanded="false">{{ T["nav_account"] }}</button>
+            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg ct-accountMenu" aria-labelledby="accountDropdown">
+              <li class="ct-accountEmail">{{ CURRENT_USER.email or "Signed in" }}</li>
+              <li><a class="dropdown-item" href="/account">{{ T["nav_my_account"] }}</a></li>
+              <li><button class="dropdown-item ct-accountLogout" type="button" data-auth-logout>{{ T["nav_logout"] }}</button></li>
+            </ul>
+          </li>
+          {% else %}
+          <li class="nav-item px-2 px-xl-2">
+            <button class="nav-link fw-medium ct-authNavBtn" type="button" data-auth-open>{{ T["nav_login"] }}</button>
+          </li>
+          {% endif %}
+        </ul>
+
+        <div class="ms-lg-3 mt-3 mt-lg-0 d-flex gap-3 align-items-lg-center align-items-stretch flex-column flex-lg-row">
+          <div class="d-flex align-items-center gap-2">
+            <a class="btn btn-primary btn-sm px-3 ct-headerCta" href="{{ NAV_MAP_URL }}">{{ T["nav_start_guide"] }}</a>
+            {% block header_right %}{% endblock %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+{% endif %}
+
+<main class="main" id="top">
+  {% if not IS_ADMIN_AREA %}
+  <div class="ct-heroSearchSlot" aria-label="{{ T['search_guides'] }}">
+    <div class="container">
+      <div class="ag-search-wrap ct-searchWrap ct-heroSearchWrap" id="headerSearch">
+        <input id="navSearchInput" class="form-control ag-search-input" type="search"
+               placeholder="{{ T['nav_search_ph'] }}" autocomplete="off"/>
+        <div class="ag-search-dd" id="navSearchDropdown" hidden></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+{% if not IS_ADMIN_AREA %}
+{% block prefooter %}
+  <section class="ct-prefooter"></section>
+{% endblock %}
+
+<footer class="ct-footer">
+  <div class="ct-footerGlow" aria-hidden="true"></div>
+  <div class="container">
+    <div class="ct-footerMain">
+      <div class="ct-footerIntro">
+        <div class="ct-footerBrand ct-footerLogo">
+          <img src="{{ url_for('static', filename='img/soniccity-logo.png') }}?v={{ ASSET_VER }}" alt="{{ BRAND_NAME }}" width="184" height="50"/>
+        </div>
+        <p class="ct-footerMuted mb-0">{{ T["footer_tagline"] }}</p>
+        <a class="ct-footerMapBtn" href="{{ NAV_MAP_URL }}">{{ T["cta_open_map"] }}</a>
+      </div>
+
+      <div class="ct-footerCols ct-footerColsWide">
+        <div class="ct-footerCol">
+          <div class="ct-footerHead">{{ T["footer_product"] }}</div>
+          <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#how">{{ T["footer_how"] }}</a>
+          <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#drivingMode">{{ T["footer_driving_mode"] }}</a>
+          <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#walkingMode">{{ T["footer_walking_mode"] }}</a>
+          <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#live">{{ T["footer_audio_player"] }}</a>
+          <a class="ct-footerLink" href="{{ _blog_url }}">{{ T["nav_blog"] }}</a>
+        </div>
+
+        <div class="ct-footerCol">
+          <div class="ct-footerHead">{{ T["footer_explore"] }}</div>
+          <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#countryPreview">{{ T["nav_countries"] }}</a>
+          <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#popularCities">{{ T["nav_cities"] }}</a>
+          <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#popularPlaces">{{ T["nav_places"] }}</a>
+          <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#exploreGuides">{{ T["footer_popular_guides"] }}</a>
+          <a class="ct-footerLink" href="{{ _blog_url }}">{{ T["footer_travel_blog"] }}</a>
+        </div>
+
+        <div class="ct-footerCol">
+          <div class="ct-footerHead">{{ T["footer_popular"] }}</div>
+          {% for item in FOOTER_POPULAR_CITIES %}
+            <a class="ct-footerLink" href="{{ item.url }}">{{ item.name }}</a>
+          {% endfor %}
+        </div>
+
+        <div class="ct-footerCol">
+          <div class="ct-footerHead">{{ T["footer_legal"] }}</div>
+          <a class="ct-footerLink" href="#">{{ T["footer_privacy"] }}</a>
+          <a class="ct-footerLink" href="#">{{ T["footer_terms"] }}</a>
+          <a class="ct-footerLink" href="#">{{ T["footer_cookies"] }}</a>
+          <a class="ct-footerLink" href="{{ _contact_url }}">{{ T["footer_contacts"] }}</a>
+        </div>
+
+        <div class="ct-footerCol">
+          <div class="ct-footerHead">{{ T["footer_languages"] }}</div>
+          {% for l in NAV_LANGS %}
+            <a class="ct-footerLink" href="{{ l.url }}">{{ l.label }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="ct-footerBottom">
+      <div class="ct-footerLegalLine">
+        <small class="ct-footerMuted">© {{ BRAND_NAME }} • {{ NAV_EUROPE_COUNTRIES|length }} {{ T["footer_countries"]|lower }}</small>
+        <a class="ct-footerMail" href="mailto:{{ CONTACT_EMAIL }}">{{ CONTACT_EMAIL }}</a>
+      </div>
+      <div class="ct-footerBottomLangs">
+        {% for l in NAV_LANGS %}
+          <a class="ct-footerLangLink" href="{{ l.url }}">{{ l.label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div id="subscribeOverlay" class="ct-subscribeOverlay" hidden aria-hidden="true">
+  <article class="ct-subscribeDialog" role="dialog" aria-modal="true" aria-labelledby="subscribeTitle">
+    <button id="subscribeClose" class="ag-mapAction ct-subscribeClose" type="button" aria-label="{{ T['subscription_close'] }}">{{ T["subscription_close"] }}</button>
+    <img class="ct-subscribeLogo" src="{{ url_for('static', filename='img/soniccity-logo.png') }}?v={{ ASSET_VER }}" alt="{{ BRAND_NAME }}" width="184" height="50"/>
+    <span class="ux-kicker">{{ T["subscription_kicker"] }}</span>
+    <h2 id="subscribeTitle">{{ T["subscription_title"] }}</h2>
+    <p>{{ T["subscription_intro"] }}</p>
+    <form id="subscribeForm" class="ct-subscribeForm">
+      <input id="subscribeName" type="text" name="name" placeholder="{{ T['subscription_name_ph'] }}" autocomplete="name"/>
+      <input id="subscribeEmail" type="email" name="email" placeholder="{{ T['subscription_email_ph'] }}" autocomplete="email" required/>
+      <button class="btn btn-primary ct-primaryBtn" type="submit">{{ T["subscription_submit"] }}</button>
+    </form>
+    <small id="subscribeFeedback" class="ct-subscribeFeedback" aria-live="polite"></small>
+    <small class="ct-footerMuted">{{ T["subscription_note"] }}</small>
+  </article>
+</div>
+
+<div id="authOverlay" class="ct-authOverlay" hidden aria-hidden="true">
+  <article class="ct-authDialog" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <button id="authClose" class="ag-mapAction ct-authClose" type="button" aria-label="{{ T['auth_close'] }}">{{ T["auth_close"] }}</button>
+    <span class="ux-kicker">{{ T["auth_kicker"] }}</span>
+    <h2 id="authTitle">{{ T["auth_login_title"] }}</h2>
+    <p id="authIntro">{{ T["auth_login_intro"] }}</p>
+    <form id="authForm" class="ct-authForm" data-mode="login">
+      <input id="authEmail" type="email" name="email" placeholder="{{ T['auth_email'] }}" autocomplete="email" required/>
+      <input id="authPassword" type="password" name="password" placeholder="{{ T['auth_password'] }}" autocomplete="current-password" required minlength="8"/>
+      <input id="authRepeatPassword" type="password" name="repeatPassword" placeholder="{{ T['auth_repeat_password'] }}" autocomplete="new-password" hidden minlength="8"/>
+      <input id="authCountry" type="text" name="country" placeholder="{{ T['auth_country'] }}" autocomplete="country-name" hidden/>
+      <button id="authSubmit" class="btn btn-primary ct-primaryBtn" type="submit">{{ T["auth_login_submit"] }}</button>
+    </form>
+    <div class="ct-authActions">
+      <button id="authSwitch" class="ct-authSwitch" type="button">{{ T["auth_switch_signup"] }}</button>
+      <button id="authForgot" class="ct-authSwitch" type="button">{{ T["auth_forgot"] }}</button>
+      <button id="authResend" class="ct-authSwitch" type="button" hidden>{{ T["auth_resend"] }}</button>
+    </div>
+    <small id="authFeedback" class="ct-authFeedback" aria-live="polite"></small>
+  </article>
+</div>
+
+<!-- Sticky player (controlled by static/app.js) -->
+<div id="stickyPlayer" class="ag-player" hidden>
+  <div class="ag-player-inner">
+    <div class="ag-player-top">
+      <div class="ag-player-now">
+        <div class="ag-player-cover" aria-hidden="true">
+          <span class="ag-player-coverWave"><i></i><i></i><i></i></span>
+        </div>
+        <div class="ag-player-copy">
+          <div class="ag-player-statusRow">
+            <span id="plStatus" class="ag-player-status">{{ T["player_choose_story"] }}</span>
+          </div>
+          <div id="plTitle" class="ag-player-title">—</div>
+          <div id="plMeta" class="ag-player-meta"></div>
+        </div>
+      </div>
+
+      <div class="ag-player-ctrls">
+        <button id="plPrev" class="ag-player-btn" type="button" aria-label="{{ T['player_previous'] }}" disabled>
+          <svg class="ag-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 6v12M17 7l-7 5 7 5"></path>
+          </svg>
+        </button>
+        <button id="plToggle" class="ag-player-btn ag-player-btnPrimary" type="button" aria-label="{{ T['player_play_pause'] }}">
+          <svg class="ag-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 7l7 5-7 5z"></path>
+          </svg>
+        </button>
+        <button id="plStop" class="ag-player-btn" type="button" aria-label="{{ T['player_stop'] }}" disabled>
+          <svg class="ag-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 8h8v8h-8z"></path>
+          </svg>
+        </button>
+        <button id="plNext" class="ag-player-btn" type="button" aria-label="{{ T['player_next'] }}" disabled>
+          <svg class="ag-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M17 6v12M7 7l7 5-7 5"></path>
+          </svg>
+        </button>
+        <button id="plSpeed" class="ag-player-btn" type="button" aria-label="{{ T['player_speed'] }}">1×</button>
+        <button id="plVoice" class="ag-player-btn ag-player-voiceBtn" type="button" aria-label="{{ T['voice_label'] }}">{{ T["voice_female"] }}</button>
+        <button id="plSaveGuide" class="ag-player-btn ag-player-saveBtn" type="button" aria-label="{{ T['player_save'] }}">{{ T["player_save"] }}</button>
+        <label class="ag-player-volume" aria-label="{{ T['player_volume'] }}">
+          <span aria-hidden="true">{{ T["player_volume_short"] }}</span>
+          <input id="plVolume" type="range" min="0" max="1" step="0.05" value="1" />
+        </label>
+      </div>
+
+      <div class="ag-player-stats">
+        <small id="plTime">--:--</small>
+        <span id="plPct">0%</span>
+      </div>
+    </div>
+
+    <div class="ag-bar" aria-hidden="true">
+      <div id="plFill" class="ag-barFill"></div>
+      <div id="plKnob" class="ag-knob" style="left:0%"></div>
+      <div id="plKnobLabel" class="ag-knobLabel" style="left:0%">--:--</div>
+    </div>
+    <div id="plLoading" class="ag-playerLoading" hidden>{{ T["audio_loading"] }}</div>
+  </div>
+  <div id="plAuthGate" class="ag-playerAuthGate" hidden>
+    <p>{{ T["player_auth_gate"] }}</p>
+    <a class="btn btn-primary ct-primaryBtn ag-playerAuthBtn" href="/?login=1&mode=register" data-auth-open data-auth-mode="register">{{ T["player_signup_cta"] }}</a>
+  </div>
+</div>
+{% endif %}
+
+{% if use_leaflet %}
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endif %}
+
+<script src="{{ url_for('static', filename='jadoo/vendors/@popperjs/popper.min.js') }}"></script>
+<script src="{{ url_for('static', filename='jadoo/vendors/bootstrap/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='jadoo/vendors/is/is.min.js') }}"></script>
+
+<script>
+  window.APP_LANG = {{ (CURRENT_LANG_PUBLIC if CURRENT_LANG_PUBLIC is defined else CURRENT_LANG)|tojson }};
+  window.APP_LANG_INTERNAL = {{ CURRENT_LANG|tojson }};
+  window.I18N = {{ T|tojson }};
+  window.AG_IS_LOGGED_IN = {{ IS_LOGGED_IN|tojson }};
+  window.AG_LOGIN_URL = "/?login=1";
+  window.AG_SIGNUP_URL = "/?login=1&mode=register";
+  window.AG_CSRF_TOKEN = {{ _csrf_token|tojson }};
+</script>
+
+<script src="{{ url_for('static', filename='site.js') }}?v={{ ASSET_VER }}"></script>
+<script src="{{ url_for('static', filename='gallery.js') }}?v={{ ASSET_VER }}"></script>
+{% if IS_ADMIN_AREA %}
+  <script src="{{ url_for('static', filename='admin_fast.js') }}?v={{ ASSET_VER }}" defer></script>
+{% endif %}
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

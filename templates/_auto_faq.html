@@ -1,0 +1,23 @@
+{% set has_admin_faq = admin_content and admin_content.faqEnabled and admin_content.faq %}
+{% set faq_items = auto_faq.get("items", []) if auto_faq else [] %}
+{% if faq_items and not has_admin_faq %}
+  <section class="ux-section ux-autoFaqSection" id="{{ auto_faq.get('id', 'faq') }}">
+    <div class="container">
+      <article class="ux-textBlock ux-autoFaqBlock">
+        <span class="ux-kicker">FAQ</span>
+        <h2>{{ auto_faq.get("title", "Audio guide questions") }}</h2>
+        <div class="ux-faqList ux-autoFaqList">
+          {% for item in faq_items %}
+            <details class="ux-autoFaqItem" {% if loop.first %}open{% endif %}>
+              <summary><h3>{{ item.question }}</h3></summary>
+              <div class="ux-faqAnswer">{{ item.answerHtml|safe }}</div>
+            </details>
+          {% endfor %}
+        </div>
+      </article>
+      {% if auto_faq_schema and not schema_in_graph %}
+        <script type="application/ld+json">{{ auto_faq_schema|tojson }}</script>
+      {% endif %}
+    </div>
+  </section>
+{% endif %}

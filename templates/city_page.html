@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{{ city.name }} – {{ country_name }} Audio Guide</title>
+  <meta name="description" content="Audio guide for {{ city.name }}, {{ country_name }}. Explore audio stories and listen to the city guide."/>
+  <link rel="stylesheet" href="/static/site.css"/>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+<header class="Topbar">
+  <div class="TopbarInner">
+    <div class="Brand">
+      <a class="BrandLink" href="/">AudioGuide</a>
+      <span class="BrandSub">/{{ country_slug }}/{{ city.city_slug }}/</span>
+    </div>
+
+    <nav class="MegaNav">
+      <a class="NavLink" href="/">Home</a>
+
+      <div class="NavDropWide" id="navPlaces">
+        <button class="NavBtn" type="button">Places</button>
+        <div class="MegaWide" id="megaPlaces">
+          <div class="MegaWideInner">
+            <div class="DropLoading">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="TopSearch">
+      <input id="globalSearch" class="Input" type="search" placeholder="Search city or country…">
+      <div id="globalSuggest" class="Suggest" hidden></div>
+    </div>
+  </div>
+</header>
+
+<main class="WideWrap">
+  <section class="MainGrid">
+    <aside class="LeftPanel">
+      <div class="Card">
+        <div class="CardHeader">
+          <h1 class="H1">{{ city.name }}</h1>
+          <div class="Muted">
+            {{ country_flag }} <a href="/{{ country_slug }}/" class="LinkSoft">{{ country_name }}</a>
+            <span class="Dot">•</span>
+            Population: {{ city.population }}
+          </div>
+        </div>
+
+        <div class="CardBody">
+          <p class="P">
+            <b>{{ city.name }}</b> is a notable place in <b>{{ country_name }}</b>.
+            This page turns city content into an audio-friendly outline: you’ll see compact audio topics,
+            and you can listen topic by topic or play the full guide. Perfect for driving: fast, minimal, and clear.
+          </p>
+
+          <div class="Row" style="margin-top:10px">
+            <button id="btnListenAll" class="Btn BtnPrimary" type="button" disabled>Listen all</button>
+            <button id="btnPause" class="Btn" type="button" disabled>Pause</button>
+            <button id="btnResume" class="Btn" type="button" disabled>Resume</button>
+            <button id="btnStop" class="Btn" type="button" disabled>Stop</button>
+          </div>
+
+          <div id="status" class="Status">Loading guide…</div>
+
+          <h2 class="H2" style="margin-top:14px">Audio stories</h2>
+          <div id="sections"></div>
+
+          <h2 class="H2" style="margin-top:14px">FAQ</h2>
+          <div class="Faq">
+            <details open>
+              <summary>Where does the content come from?</summary>
+              <div class="FaqBody">We use trusted city sources to prepare compact audio topics for listening.</div>
+            </details>
+            <details>
+              <summary>Why don’t you show the full text?</summary>
+              <div class="FaqBody">This format is optimized for audio. You see only the topic list while the full guide is handled by the player.</div>
+            </details>
+            <details>
+              <summary>Can I listen section-by-section?</summary>
+              <div class="FaqBody">Yes. Each audio topic has Play/Pause and Stop controls.</div>
+            </details>
+          </div>
+
+          <script type="application/ld+json">
+          {
+            "@context":"https://schema.org",
+            "@type":"FAQPage",
+            "mainEntity":[
+              {"@type":"Question","name":"Where does the content come from?","acceptedAnswer":{"@type":"Answer","text":"We use trusted city sources to prepare compact audio topics for listening."}},
+              {"@type":"Question","name":"Why don’t you show the full text?","acceptedAnswer":{"@type":"Answer","text":"This format is optimized for audio. You see only the topic list while the full guide is handled by the player."}},
+              {"@type":"Question","name":"Can I listen section-by-section?","acceptedAnswer":{"@type":"Answer","text":"Yes. Each audio topic has Play/Pause and Stop controls."}}
+            ]
+          }
+          </script>
+        </div>
+      </div>
+    </aside>
+
+    <section class="RightPanel">
+      <div class="Card MapCard">
+        <div class="CardHeader">
+          <h2 class="H2">Map</h2>
+          <div class="Muted Small">{{ city.name }}, {{ country_name }}</div>
+        </div>
+        <div id="map" class="MapBox"></div>
+      </div>
+    </section>
+  </section>
+</main>
+
+<script>
+  window.CITY_PAGE = {
+    name: {{ city.name|tojson }},
+    wikiTitle: {{ city.wikiTitle|tojson }},
+    lat: {{ city.lat }},
+    lon: {{ city.lon }},
+    country: {{ country_name|tojson }}
+  };
+</script>
+
+<script src="/static/mega_places.js"></script>
+<script src="/static/search_shared.js"></script>
+<script>
+  window.SearchShared?.bindSearch({ inputId:"globalSearch", boxId:"globalSuggest", limit:14 });
+</script>
+
+<script src="/static/city_detail.js"></script>
+
+</body>
+</html>

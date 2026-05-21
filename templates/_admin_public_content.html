@@ -1,0 +1,39 @@
+{% if admin_content and ((admin_content.seoTextEnabled and admin_content.seoTextHtml) or (admin_content.faqEnabled and admin_content.faq)) %}
+  <section class="ux-section ux-managedContent" id="managedSeoFaq">
+    <div class="container">
+      {% if admin_content.seoTextEnabled and admin_content.seoTextHtml %}
+        {% if admin_content.seoDisplayMode == "accordion" %}
+          <details class="ux-textBlock ux-managedSeoText">
+            <summary>{{ admin_content.seoTextTitle or "Audio guide travel notes" }}</summary>
+            {% if admin_content.seoTextIntro %}<p class="lead">{{ admin_content.seoTextIntro }}</p>{% endif %}
+            {{ admin_content.seoTextHtml|safe }}
+          </details>
+        {% else %}
+          <article class="ux-textBlock ux-managedSeoText {% if admin_content.seoDisplayMode == 'collapsed' %}is-collapsedMode{% endif %}">
+            {% if admin_content.seoTextTitle %}<h2>{{ admin_content.seoTextTitle }}</h2>{% endif %}
+            {% if admin_content.seoTextIntro %}<p class="lead">{{ admin_content.seoTextIntro }}</p>{% endif %}
+            {{ admin_content.seoTextHtml|safe }}
+          </article>
+        {% endif %}
+      {% endif %}
+
+      {% if admin_content.faqEnabled and admin_content.faq %}
+        <article class="ux-textBlock ux-managedFaq">
+          <span class="ux-kicker">FAQ</span>
+          <h2>{{ admin_content.faqTitle or "Questions before you listen" }}</h2>
+          <div class="ux-faqList">
+            {% for item in admin_content.faq %}
+              <details {% if loop.first %}open{% endif %}>
+                <summary><h3>{{ item.question }}</h3></summary>
+                <div class="ux-faqAnswer">{{ item.answerHtml|safe }}</div>
+              </details>
+            {% endfor %}
+          </div>
+        </article>
+        {% if admin_content.faqSchema and not schema_in_graph %}
+          <script type="application/ld+json">{{ admin_content.faqSchema|tojson }}</script>
+        {% endif %}
+      {% endif %}
+    </div>
+  </section>
+{% endif %}

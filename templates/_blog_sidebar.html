@@ -1,0 +1,47 @@
+<section class="ux-sideCard">
+  <h3>{{ T["blog_popular_posts"] }}</h3>
+  <div class="ux-miniList">
+    {% for item in sidebar.popular_posts %}
+      <a href="{{ URL_BLOG_POST(item) }}">
+        {% if item.heroImage %}
+          <img src="{{ item.heroImage }}" alt="{{ item.title }}" loading="lazy" decoding="async"/>
+        {% else %}
+          <img src="/static/img/place-placeholder.svg" alt="{{ item.title }}" loading="lazy" decoding="async"/>
+        {% endif %}
+        <span>
+          <b>{{ item.title }}</b>
+          <small>{{ item.category }}</small>
+        </span>
+      </a>
+    {% else %}
+      <p>{{ T["blog_no_popular_posts"] }}</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="ux-sideCard">
+  <h3>{{ T["blog_categories_title"] }}</h3>
+  <div class="ux-countryPills">
+    {% for category in sidebar.categories %}
+      <a class="ct-countryPill" href="{{ URL_BLOG(lang) }}?category={{ category.slug }}">
+        <span>{{ category.name }}</span>
+        <small>{{ category.count }}</small>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="ux-sideCard">
+  <h3>{{ T["blog_tags_title"] }}</h3>
+  <div class="ux-blogTags">
+    {% for tag in sidebar.tags %}
+      <a href="{{ URL_BLOG(lang) }}?tag={{ tag.slug }}">{{ tag.name }}</a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="ux-sideCard ux-blogNewsletter">
+  <h3>{{ T["subscription_kicker"] }}</h3>
+  <p>{{ T["subscription_updates_text"] }}</p>
+  <a class="btn btn-primary ct-primaryBtn" href="{{ NAV_HOME_URL }}#finalCta">{{ T["hero_start_listening"] }}</a>
+</section>

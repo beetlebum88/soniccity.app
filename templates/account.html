@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% macro time_label(seconds) -%}
+  {% set s = seconds|float %}
+  {{ (s // 60)|int }}:{{ "%02d"|format((s % 60)|int) }}
+{%- endmacro %}
+
+{% macro history_card(item, compact=False) -%}
+  {% set pct = item.progressPercent|default(0)|float %}
+  {% set raw_url = item.pageUrl or "/" %}
+  {% set continue_base = raw_url.split("#")[0] %}
+  {% set continue_anchor = ("#" ~ raw_url.split("#", 1)[1]) if "#" in raw_url else "" %}
+  {% set sep = "&" if "?" in continue_base else "?" %}
+  {% set continue_url = continue_base ~ sep ~ "continueListening=" ~ item.id ~ "&sectionId=" ~ (item.sectionId or "") ~ "&t=" ~ (item.currentTime or 0) ~ continue_anchor %}
+  {% set city_title = item.city or item.entityTitle or item.country or T["badge_audio"] %}
+  {% set audio_title = item.sectionTitle or T["player_choose_story"] %}
+  <article class="ux-accountHistoryCard">
+    <div>
+      <strong>{{ city_title }}</strong>
+      <span>{{ T["badge_audio"] }}: {{ audio_title }}{% if item.language %} · {{ item.language|upper }}{% endif %}</span>
+      {% if item.pageUrl %}
+        <small class="ux-accountHistoryLink">Link: <a href="{{ raw_url }}">{{ raw_url }}</a></small>
+      {% endif %}
+      <div class="ux-accountProgress"><i style="width:{{ pct }}%"></i></div>
+      <small>{{ time_label(item.currentTime or 0) }} / {{ time_label(item.duration or 0) }} · {{ item.lastListenedAt or item.updatedAt }}</small>
+    </div>
+    <a class="ux-accountAction" href="{{ continue_url }}">{{ T["common_continue"] }}</a>
+  </article>
+{%- endmacro %}
+
+{% block content %}
+<section class="ux-accountPage">
+  <div class="container ux-accountShell">
+    <header class="ux-accountHero">
+      <span class="ux-kicker">{{ T["account_kicker"] }}</span>
+      <h1>{{ T["account_title"] }}</h1>
+      <p>{{ T["account_intro"] }}</p>
+      {% if not email_verified %}
+        <div class="ux-accountVerify">
+          {{ T["account_confirm_email"] }}
+          <button class="ct-authSwitch" type="button" data-account-resend>{{ T["account_resend_verification"] }}</button>
+        </div>
+      {% endif %}
+      {% if msg %}<div class="ux-contactNotice ux-contactNoticeSuccess">{{ msg }}</div>{% endif %}
+    </header>
+
+    <nav class="ux-accountTabs" aria-label="Account sections">
+      <a class="{% if active_tab == 'overview' %}is-active{% endif %}" href="/account">{{ T["account_overview"] }}</a>
+      <a class="{% if active_tab == 'profile' %}is-active{% endif %}" href="/account/profile">{{ T["account_profile"] }}</a>
+      <a class="{% if active_tab == 'listening' %}is-active{% endif %}" href="/account/listening">{{ T["account_listening_history"] }}</a>
+      <a class="{% if active_tab == 'saved' %}is-active{% endif %}" href="/account/saved">{{ T["account_saved_guides"] }}</a>
+    </nav>
+
+    {% if active_tab == "profile" %}
+      <article class="ux-accountPanel">
+        <h2>{{ T["account_contact_info"] }}</h2>
+        <form class="ux-contactForm ux-accountForm" method="post" action="/account/profile">
+          <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+          <label><span>{{ T["label_email"] }}</span><input type="email" value="{{ user.email }}" disabled></label>
+          <label><span>{{ T["label_name"] }}</span><input name="name" value="{{ user.name }}" autocomplete="name"></label>
+          <label><span>{{ T["label_country"] }}</span><input name="country" value="{{ user.country }}" autocomplete="country-name"></label>
+          <label><span>{{ T["account_preferred_language"] }}</span><select name="preferredLanguage">{% for l in langs %}<option value="{{ l }}" {% if user.preferredLanguage == l %}selected{% endif %}>{{ l|upper }}</option>{% endfor %}</select></label>
+          <label><span>{{ T["account_preferred_voice"] }}</span><select name="preferredVoiceGender"><option value="female" {% if user.preferredVoiceGender != "male" %}selected{% endif %}>{{ T["voice_preference_female"] }}</option><option value="male" {% if user.preferredVoiceGender == "male" %}selected{% endif %}>{{ T["voice_preference_male"] }}</option></select></label>
+          <button class="btn btn-primary ct-primaryBtn" type="submit">{{ T["account_save_profile"] }}</button>
+        </form>
+        <form class="ux-accountDanger" method="post" action="/account/delete">
+          <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+          <p>{{ T["account_privacy_note"] }}</p>
+          <button class="ux-accountGhost" type="submit">{{ T["common_delete_account"] }}</button>
+        </form>
+      </article>
+    {% elif active_tab == "listening" %}
+      <article class="ux-accountPanel">
+        <div class="ux-accountPanelHead">
+          <h2>{{ T["account_listening_history"] }}</h2>
+          <form method="post" action="/account/listening/clear"><input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}"><button class="ux-accountGhost" type="submit">{{ T["common_clear_all"] }}</button></form>
+        </div>
+        <div class="ux-accountList">
+          {% for item in history %}{{ history_card(item) }}{% else %}<p>{{ T["account_no_history"] }}</p>{% endfor %}
+        </div>
+      </article>
+    {% elif active_tab == "saved" %}
+      <article class="ux-accountPanel">
+        <div class="ux-accountPanelHead">
+          <h2>{{ T["account_saved_guides"] }}</h2>
+          <form method="post" action="/account/saved/clear"><input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}"><button class="ux-accountGhost" type="submit">{{ T["common_clear_all"] }}</button></form>
+        </div>
+        <div class="ux-accountList">
+          {% for item in favorites %}
+            <article class="ux-accountHistoryCard">
+              <div>
+                <strong>{{ item.title }}</strong>
+                <span>{{ item.entityType|title }}{% if item.audioTitle %} · {{ item.audioTitle }}{% endif %}{% if item.language %} · {{ item.language|upper }}{% endif %}</span>
+                {% if item.city or item.country %}<small>{{ [item.city, item.country]|select|join(", ") }}</small>{% endif %}
+                {% if item.pageUrl %}<small class="ux-accountHistoryLink">Link: <a href="{{ item.pageUrl }}">{{ item.pageUrl }}</a></small>{% endif %}
+                <small>{{ item.createdAt }}</small>
+              </div>
+              <a class="ux-accountAction" href="{{ item.pageUrl or '/' }}">{{ T["common_open"] }}</a>
+            </article>
+          {% else %}<p>{{ T["account_no_saved"] }}</p>{% endfor %}
+        </div>
+      </article>
+    {% else %}
+      <div class="ux-accountGrid">
+        <article class="ux-accountPanel">
+          <h2>{{ T["account_continue_listening"] }}</h2>
+          {% if continue_item %}{{ history_card(continue_item) }}{% else %}<p>{{ T["account_start_story"] }}</p>{% endif %}
+        </article>
+        <article class="ux-accountPanel">
+          <h2>{{ T["account_profile_summary"] }}</h2>
+          <dl class="ux-accountFacts">
+            <div><dt>{{ T["label_email"] }}</dt><dd>{{ user.email }}</dd></div>
+            <div><dt>{{ T["account_email_status"] }}</dt><dd>{{ T["account_verified"] if email_verified else T["account_pending_verification"] }}</dd></div>
+            <div><dt>{{ T["label_country"] }}</dt><dd>{{ user.country or "—" }}</dd></div>
+            <div><dt>{{ T["label_voice"] }}</dt><dd>{{ user.preferredVoiceGender|title }}</dd></div>
+            <div><dt>{{ T["account_registered"] }}</dt><dd>{{ user.registeredAt or "—" }}</dd></div>
+            <div><dt>{{ T["account_last_login"] }}</dt><dd>{{ user.lastLoginAt or "—" }}</dd></div>
+          </dl>
+        </article>
+        <article class="ux-accountPanel ux-accountWide">
+          <h2>{{ T["account_recently_listened"] }}</h2>
+          <div class="ux-accountList">
+            {% for item in history[:6] %}{{ history_card(item, True) }}{% else %}<p>{{ T["account_no_history"] }}</p>{% endfor %}
+          </div>
+        </article>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

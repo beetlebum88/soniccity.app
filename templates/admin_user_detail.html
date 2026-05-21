@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block header_right %}
+  <form method="post" action="/admin/logout"><input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}"><button class="cms-btn cms-btn-soft" type="submit">Logout</button></form>
+{% endblock %}
+
+{% block content %}
+<section class="cms-shell">
+  <aside class="cms-sidebar">
+    <a class="cms-brand" href="/admin"><strong>Audio Guide CMS</strong><span>{{ BRAND_NAME }}</span></a>
+    <nav class="cms-nav" aria-label="Admin navigation">
+      <a class="cms-nav-dashboard" href="/admin">Dashboard</a>
+      {% for group in admin_groups %}
+        <section class="cms-nav-group">
+          <h2>{{ group.label }}</h2>
+          {% for item in group["items"] %}<a href="{{ item.url }}" class="{% if item.active %}is-active{% endif %}">{{ item.label }}</a>{% endfor %}
+        </section>
+      {% endfor %}
+    </nav>
+  </aside>
+  <main class="cms-main">
+    <header class="cms-topbar">
+      <div>
+        <span class="cms-eyebrow">Users</span>
+        <h1>{{ user.email }}</h1>
+        <p>Passwords are stored only as hashes and are not shown here.</p>
+      </div>
+      <div class="cms-top-actions">
+        <a class="cms-btn cms-btn-soft" href="/admin/users">Back to users</a>
+        <form method="post"><input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}"><button class="cms-btn cms-btn-soft" name="action" value="resend" type="submit">Resend verification</button></form>
+        {% if public_user.status == "active" %}
+          <form method="post"><input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}"><button class="cms-btn cms-btn-soft" name="action" value="deactivate" type="submit">Deactivate</button></form>
+        {% else %}
+          <form method="post"><input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}"><button class="cms-btn cms-btn-primary" name="action" value="activate" type="submit">Activate</button></form>
+        {% endif %}
+      </div>
+    </header>
+
+    <section class="cms-dashboard-grid">
+      <article class="cms-card">
+        <div class="cms-card-head"><h2>Profile</h2><span>{{ public_user.status }}</span></div>
+        <div class="cms-module-list">
+          <div><strong>Email</strong><span>{{ user.email }}</span></div>
+          <div><strong>Name</strong><span>{{ user.name or "—" }}</span></div>
+          <div><strong>Country</strong><span>{{ user.country or user.registrationCountry or "—" }}</span></div>
+          <div><strong>Email verified</strong><span>{{ "Yes" if public_user.emailVerified else "No" }}</span></div>
+          <div><strong>Registered</strong><span>{{ user.registeredAt or user.createdAt }}</span></div>
+          <div><strong>Last login</strong><span>{{ user.lastLoginAt or "—" }}</span></div>
+        </div>
+        {% if not public_user.emailVerified %}
+          <form method="post"><input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}"><button class="cms-btn cms-btn-primary" name="action" value="verify" type="submit">Verify manually</button></form>
+        {% endif %}
+      </article>
+      <article class="cms-card">
+        <div class="cms-card-head"><h2>Security</h2><span>Login metadata</span></div>
+        <div class="cms-module-list">
+          <div><strong>Last IP</strong><span>{{ user.lastLoginIp or user.ip or "—" }}</span></div>
+          <div><strong>Created IP</strong><span>{{ user.ip or "—" }}</span></div>
+          <div><strong>Login count</strong><span>{{ user.loginCount or 0 }}</span></div>
+          <div><strong>Password changed</strong><span>{{ user.passwordChangedAt or "—" }}</span></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="cms-card">
+      <div class="cms-card-head"><h2>Listening history</h2><span>{{ history|length }} items</span></div>
+      <div class="cms-table-wrap">
+        <table class="cms-table"><thead><tr><th>Guide</th><th>Topic</th><th>Progress</th><th>Last listened</th><th>URL</th></tr></thead><tbody>
+          {% for item in history %}
+            <tr><td>{{ item.entityTitle }}</td><td>{{ item.sectionTitle }}</td><td>{{ item.progressPercent }}%</td><td>{{ item.lastListenedAt }}</td><td><a href="{{ item.pageUrl }}" target="_blank" rel="noopener">{{ item.pageUrl }}</a></td></tr>
+          {% else %}<tr><td colspan="5">No listening history.</td></tr>{% endfor %}
+        </tbody></table>
+      </div>
+    </section>
+
+    <section class="cms-dashboard-grid">
+      <article class="cms-card">
+        <div class="cms-card-head"><h2>Favorites</h2><span>{{ favorites|length }}</span></div>
+        <div class="cms-module-list">
+          {% for item in favorites %}<div><strong>{{ item.title }}</strong><span>{{ item.entityType }} · {{ item.createdAt }}</span></div>{% else %}<p>No favorites.</p>{% endfor %}
+        </div>
+      </article>
+      <article class="cms-card">
+        <div class="cms-card-head"><h2>Comments / ratings</h2><span>{{ comments|length }} comments · {{ ratings|length }} ratings</span></div>
+        <div class="cms-module-list">
+          <div><strong>Comments</strong><span>{{ comments|length }}</span></div>
+          <div><strong>Ratings</strong><span>{{ ratings|length }}</span></div>
+        </div>
+      </article>
+    </section>
+  </main>
+</section>
+{% endblock %}

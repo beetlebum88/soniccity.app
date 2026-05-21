@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>City directory</title>
+  <link rel="stylesheet" href="/static/city.css"/>
+</head>
+<body>
+  <header class="Topbar">
+    <div class="TopbarInner">
+      <div class="Brand">
+        <a class="BrandLink" href="/">AudioGuide</a>
+        <span class="BrandSub">/city/</span>
+      </div>
+
+      <nav class="TopbarNav">
+        <a class="NavLink" href="/">Home</a>
+        <a class="NavLink Active" href="/city/">Cities</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="CityIndexWrap">
+    <section class="Card">
+      <div class="CardHeader">
+        <h1 class="H1">All cities</h1>
+        <div class="Muted" id="countInfo">Loading…</div>
+      </div>
+
+      <div class="Filters">
+        <div class="Field">
+          <label class="Label" for="q">Search</label>
+          <input id="q" class="Input" type="search" placeholder="Start typing… (e.g. valencia)"/>
+        </div>
+
+        <div class="Field">
+          <label class="Label" for="country">Country</label>
+          <select id="country" class="Select">
+            <option value="">All countries</option>
+          </select>
+        </div>
+
+        <div class="Field">
+          <label class="Label" for="starts">Alphabet</label>
+          <div class="Alpha" id="alpha">
+            <!-- A-Z buttons -->
+          </div>
+        </div>
+      </div>
+
+      <div class="ListHead">
+        <div class="Muted" id="listHint">
+          Tip: use search / country / alphabet. (List updates instantly)
+        </div>
+        <button id="clearBtn" class="Btn" type="button">Clear filters</button>
+      </div>
+
+      <div class="CityListWrap">
+        <ul class="CityList" id="cityList"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/city_index.js"></script>
+</body>
+</html>

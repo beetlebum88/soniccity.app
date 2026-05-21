@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="ux-contactPage">
+  <div class="container ux-contactShell">
+    <article class="ux-contactIntro">
+      <span class="ux-kicker">SonicCity support</span>
+      <h1>{{ copy.title }}</h1>
+      <p>{{ copy.intro }}</p>
+      <a class="ux-contactMail" href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+    </article>
+
+    <article class="ux-contactFormCard">
+      {% if status %}
+        <div class="ux-contactNotice ux-contactNoticeSuccess" role="status">{{ status }}</div>
+      {% endif %}
+      {% if error %}
+        <div class="ux-contactNotice ux-contactNoticeError" role="alert">{{ error }}</div>
+      {% endif %}
+      {% set contact_action = URL_CONTACT(CURRENT_LANG) if URL_CONTACT is defined else ('/contacts/' if CURRENT_LANG == 'en' else '/' ~ CURRENT_LANG ~ '/contacts/') %}
+      <form class="ux-contactForm" method="post" action="{{ contact_action }}">
+        <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}"/>
+        <input type="hidden" name="sourcePage" value="{{ request.referrer or request.path }}"/>
+        <label>
+          <span>{{ copy.name }}</span>
+          <input type="text" name="name" value="{{ form_values.name }}" autocomplete="name" required/>
+        </label>
+        <label>
+          <span>{{ copy.email }}</span>
+          <input type="email" name="email" value="{{ form_values.email }}" autocomplete="email" required/>
+        </label>
+        <label>
+          <span>{{ copy.message }}</span>
+          <textarea name="message" rows="8" required>{{ form_values.message }}</textarea>
+        </label>
+        <button class="btn btn-primary ct-primaryBtn ux-contactSubmit" type="submit">{{ copy.button }}</button>
+      </form>
+    </article>
+  </div>
+</section>
+{% include "_admin_public_content.html" %}
+{% if comments_context is not defined and PUBLIC_COMMENTS_CONTEXT is defined %}
+  {% set comments_context = PUBLIC_COMMENTS_CONTEXT("static_page", "static:contacts", copy.title, URL_CONTACT(lang), lang, admin_content, default_enabled=false) %}
+{% endif %}
+{% include "_comments.html" %}
+{% endblock %}

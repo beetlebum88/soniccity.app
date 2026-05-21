@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Continents</title>
+  <link rel="stylesheet" href="/static/site.css"/>
+</head>
+<body>
+
+<header class="Topbar">
+  <div class="TopbarInner">
+    <div class="Brand">
+      <a class="BrandLink" href="/">AudioGuide</a>
+      <span class="BrandSub">/continents/</span>
+    </div>
+
+    <nav class="MegaNav">
+      <a class="NavLink" href="/">Головна</a>
+      <a class="NavLink Active" href="/continents/">Континенти</a>
+      <a class="NavLink" href="/top-cities/">Топ міста</a>
+    </nav>
+
+    <div class="TopSearch">
+      <input id="globalSearch" class="Input" type="search" placeholder="Search city or country…">
+      <div id="globalSuggest" class="Suggest" hidden></div>
+    </div>
+  </div>
+</header>
+
+<main class="WideWrap">
+  <section class="Card">
+    <div class="CardHeader">
+      <h1 class="H1">Continents</h1>
+      <div class="Muted">TOP 10 countries per continent (by cities count in your DB)</div>
+    </div>
+    <div class="CardBody" id="continentsWrap"></div>
+  </section>
+</main>
+
+<script src="/static/mega_search.js"></script>
+<script src="/static/continents.js"></script>
+</body>
+</html>

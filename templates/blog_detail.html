@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="ux-breadcrumbs">
+    <div class="container">
+      <nav aria-label="Breadcrumb">
+        <a href="{{ NAV_HOME_URL }}">{{ T["common_home"] }}</a>
+        <span aria-hidden="true">/</span>
+        <a href="{{ URL_BLOG(lang) }}">Blog</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ post.title }}</span>
+      </nav>
+    </div>
+  </section>
+
+  <section class="ux-entityHero ux-blogHero">
+    <div class="container">
+      <article class="ux-entityHeroGrid">
+        <div class="ux-entityHeroCopy">
+          <span class="ux-badge">{{ post.category }}</span>
+          <h1>{{ post.title }}</h1>
+          <p>{{ post.excerpt }}</p>
+          <div class="ux-heroMeta">
+            <span>{{ post.publishedAt or post.updatedAt }}</span>
+            <span>{{ post.lang|upper }}</span>
+            <span>{{ T["blog_free_audio_guide"] }}</span>
+          </div>
+        </div>
+        <div class="ux-entityHeroMedia">
+          {% if post.heroImage %}
+            <img src="{{ post.heroImage }}" alt="{{ post.title }}" loading="eager" decoding="async"/>
+          {% else %}
+            <img src="/media/city/{{ post.lang }}/spain/valencia" alt="{{ post.title }}" loading="eager" decoding="async"/>
+          {% endif %}
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="ux-section">
+    <div class="container">
+      <div class="ux-blogLayout">
+        <main class="ux-blogMain">
+          <article class="ux-blogArticle">
+            <div class="ux-blogArticleMeta">
+              <span>{{ T["blog_by"] }} {{ BRAND_NAME }}</span>
+              <span>{{ post.category }}</span>
+              {% for tag in post.tags[:5] %}<a href="{{ URL_BLOG(lang) }}?tag={{ tag|lower|replace(' ', '-') }}">{{ tag }}</a>{% endfor %}
+            </div>
+            {{ post.bodyHtml|safe }}
+          </article>
+
+          <section class="ux-textBlock ux-blogEngagement" id="blog-engagement">
+            <span class="ux-kicker">{{ T["blog_community"] }}</span>
+            <h2>{{ T["blog_useful"] }}</h2>
+            <div class="ux-blogEngagementGrid">
+              <form method="post" action="{{ URL_BLOG_POST(post) }}/like">
+                <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+                <button class="btn btn-outline-dark ct-secondaryBtn" type="submit">{{ T["blog_like"] }} · {{ blog_stats.likes }}</button>
+              </form>
+              <form method="post" action="{{ URL_BLOG_POST(post) }}/rating" class="ux-ratingForm" data-auto-rating-form>
+                <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+                <span class="ux-ratingLabel">{{ T["blog_rate_article"] }}</span>
+                <div class="ux-starInput" aria-label="{{ T['blog_rate_article_aria'] }}">
+                  {% for value in [5,4,3,2,1] %}
+                    <input id="blog-rating-{{ value }}" type="radio" name="rating" value="{{ value }}" required>
+                    <label for="blog-rating-{{ value }}" title="{{ value }} stars">★</label>
+                  {% endfor %}
+                </div>
+                <small class="ux-ratingAutoHint" data-auto-rating-status>{{ T["rating_tap_star"] }}</small>
+              </form>
+              <p class="ux-ratingSummary">
+                <span class="ux-starMeter" aria-label="{{ blog_stats.ratingLabel }}">
+                  <span class="ux-starMeterBase">★★★★★</span>
+                  <span class="ux-starMeterFill" style="width:{{ blog_stats.ratingPercent }}%">★★★★★</span>
+                </span>
+                <b>{{ "%.1f"|format(blog_stats.ratingAverage) }} / 5</b>
+                <span>· {{ blog_stats.ratings }} {{ T["blog_ratings"] }}</span>
+              </p>
+              {% if comments_context and comments_context.enabled %}
+                <button class="ux-commentOpenBtn" type="button" data-comment-open>
+                  {{ comments_context.texts.button }}
+                </button>
+              {% endif %}
+            </div>
+          </section>
+
+          {% include "_comments.html" %}
+
+          {% include "_admin_public_content.html" %}
+
+          <nav class="ux-blogPrevNext" aria-label="Blog post navigation">
+            {% if prev_post %}<a href="{{ URL_BLOG_POST(prev_post) }}"><span>{{ T["common_previous"] }}</span><b>{{ prev_post.title }}</b></a>{% endif %}
+            {% if next_post %}<a href="{{ URL_BLOG_POST(next_post) }}"><span>{{ T["common_next"] }}</span><b>{{ next_post.title }}</b></a>{% endif %}
+          </nav>
+        </main>
+
+        <aside class="ux-blogSidebar">
+          {% include "_blog_sidebar.html" %}
+        </aside>
+      </div>
+    </div>
+  </section>
+{% endblock %}

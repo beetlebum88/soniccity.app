@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  {% for u in urls %}
+  <url>
+    <loc>{{ u.loc }}</loc>
+    <lastmod>{{ u.lastmod }}</lastmod>
+    <priority>{{ u.priority }}</priority>
+    <changefreq>{{ u.changefreq }}</changefreq>
+    {% for alt in u.alternates %}
+    <xhtml:link rel="alternate" hreflang="{{ alt.lang }}" href="{{ alt.url }}"/>
+    {% endfor %}
+  </url>
+  {% endfor %}
+</urlset>

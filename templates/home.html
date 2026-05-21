@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>City Audio Guide</title>
+
+  <link rel="stylesheet" href="/static/styles.css"/>
+
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+</head>
+
+<body>
+  <header class="TopBar">
+    <div class="TopBar__left">
+      <div class="Brand">City Audio Guide</div>
+      <div class="Muted">GPS map • Audio stories</div>
+    </div>
+  </header>
+
+  <main class="Wrap">
+    <div class="Card">
+      <div class="Controls">
+        <button class="Btn" id="btnLocate">Start GPS</button>
+        <button class="Btn Btn--ghost" id="btnStop" disabled>Stop</button>
+
+        <label class="Muted" style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+          <input type="checkbox" id="autoMode"/>
+          Auto play nearest
+        </label>
+      </div>
+
+      <div class="Status" id="status">Ready. Click “Start GPS”.</div>
+    </div>
+
+    <div class="Split">
+      <div class="Card MapCard">
+        <div id="map" class="Map"></div>
+      </div>
+
+      <div class="Card SideCard">
+        <h2>Nearby cities (10 km)</h2>
+        <ul class="NearbyList" id="citiesList"></ul>
+
+        <div class="Divider"></div>
+
+        <div class="Controls" style="margin-bottom:10px;">
+          <button class="Btn" id="btnSpeak" disabled>Listen all</button>
+          <button class="Btn Btn--ghost" id="btnStopSpeech" disabled>Stop</button>
+          <button class="Btn Btn--ghost" id="btnPause" disabled>Pause</button>
+          <button class="Btn Btn--ghost" id="btnResume" disabled>Resume</button>
+        </div>
+
+        <div style="font-weight:800;margin-bottom:6px;" id="storyTitle">Story</div>
+        <div class="Muted" id="storySource"></div>
+
+        <div id="storySections" style="margin-top:12px;"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="Footer">
+    Uses map data and trusted public travel sources for audio-friendly city stories.
+  </footer>
+
+  <script src="/static/app.js?v={{ ASSET_VER }}"></script>
+</body>
+</html>

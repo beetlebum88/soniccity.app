@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block header_right %}{% endblock %}
+
+{% block content %}
+  <section class="ux-adminLoginPage">
+    <div class="container">
+      <article class="ux-adminLoginCard">
+        <div>
+          <span class="ux-kicker">Secure admin</span>
+          <h1>Sign in to {{ BRAND_NAME }}</h1>
+          <p>Manage blog posts, SEO text, FAQs, audio status and travel guide content.</p>
+        </div>
+        {% if error %}
+          <div class="ux-alert ux-alert-error">{{ error }}</div>
+        {% endif %}
+        <form method="post" action="/admin/login" class="ux-adminLoginForm">
+          <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <label>
+            <span>Email</span>
+            <input type="email" name="email" autocomplete="username" value="kozachenko.vitaliy@gmail.com" required autofocus>
+          </label>
+          <label>
+            <span>Password</span>
+            <input type="password" name="password" autocomplete="current-password" required>
+          </label>
+          <button class="btn btn-primary ct-primaryBtn" type="submit">Sign in</button>
+        </form>
+      </article>
+    </div>
+  </section>
+{% endblock %}

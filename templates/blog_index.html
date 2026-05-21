@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% set blog_url = URL_BLOG(lang) %}
+  <section class="ux-breadcrumbs">
+    <div class="container">
+      <nav aria-label="Breadcrumb">
+        <a href="{{ NAV_HOME_URL }}">Home</a>
+        <span aria-hidden="true">/</span>
+        <span>Blog</span>
+      </nav>
+    </div>
+  </section>
+
+  <section class="ux-entityHero ux-blogHero">
+    <div class="container">
+      <article class="ux-entityHeroGrid">
+        <div class="ux-entityHeroCopy">
+          <span class="ux-badge">Travel blog</span>
+          <h1>Free Audio Guide stories for smarter trips</h1>
+          <p>Read practical city guide ideas, landmark stories and GPS audio travel tips before you listen on the map.</p>
+          <div class="ux-heroMeta">
+            <span>{{ posts|length }} articles</span>
+            <span>{{ lang|upper }}</span>
+            <span>Audio Guide tips</span>
+          </div>
+        </div>
+        <div class="ux-entityHeroMedia">
+          <img src="/media/city/{{ lang }}/spain/valencia" alt="Travel audio guide blog" loading="eager" decoding="async"/>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  {% include "_admin_public_content.html" %}
+
+  <section class="ux-section">
+    <div class="container">
+      <div class="ux-blogLayout">
+        <main class="ux-blogMain">
+          <form class="ux-blogSearch" method="get" action="{{ blog_url }}">
+            <label>
+              <span>Search articles</span>
+              <input type="search" name="q" value="{{ query }}" placeholder="Search city, landmark or travel tip">
+            </label>
+            <button class="btn btn-primary ct-primaryBtn" type="submit">Search</button>
+          </form>
+
+          <div class="ux-blogPostGrid">
+            {% for post in posts %}
+              <article class="ux-blogCard">
+                <a href="{{ URL_BLOG_POST(post) }}" class="ux-blogImage">
+                  {% if post.heroImage %}
+                    <img src="{{ post.heroImage }}" alt="{{ post.title }}" loading="lazy" decoding="async"/>
+                  {% else %}
+                    <img src="/media/city/{{ post.lang }}/spain/valencia" alt="{{ post.title }}" loading="lazy" decoding="async"/>
+                  {% endif %}
+                </a>
+                <div class="ux-blogCardBody">
+                  <div class="ux-cardMeta">
+                    <span>{{ post.category }}</span>
+                    <span>{{ post.publishedAt or post.updatedAt }}</span>
+                  </div>
+                  <h2><a href="{{ URL_BLOG_POST(post) }}">{{ post.title }}</a></h2>
+                  <p>{{ post.excerpt }}</p>
+                  <div class="ux-blogTags">
+                    {% for tag in post.tags[:4] %}
+                      <a href="{{ blog_url }}?tag={{ tag|lower|replace(' ', '-') }}">{{ tag }}</a>
+                    {% endfor %}
+                  </div>
+                  <a class="ux-cardCta" href="{{ URL_BLOG_POST(post) }}">Read article</a>
+                </div>
+              </article>
+            {% else %}
+              <article class="ux-emptyState">
+                <h2>No blog posts found</h2>
+                <p>Try another search or category.</p>
+                <a class="btn btn-outline-dark ct-secondaryBtn" href="{{ blog_url }}">Clear filters</a>
+              </article>
+            {% endfor %}
+          </div>
+        </main>
+
+        <aside class="ux-blogSidebar">
+          {% include "_blog_sidebar.html" %}
+        </aside>
+      </div>
+    </div>
+  </section>
+{% endblock %}

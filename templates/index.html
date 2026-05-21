@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block header_right %}
+  <!-- твоя кнопка GPS і т.д. залишаються як в твоєму index.html -->
+{% endblock %}
+
+{% block content %}
+  <div class="Layout">
+    <div class="LeftPanel">
+      <!-- тут залишай свої блоки списку міст / story / кнопки -->
+      <div id="status" class="Status">Ready. Tap “GPS”.</div>
+
+      <div class="Card">
+        <h2>Nearest cities (10 km)</h2>
+        <ul id="citiesList" class="CitiesList"></ul>
+      </div>
+
+      <div class="Card" id="storyPanel">
+        <div class="StoryHeader">
+          <h2 id="storyTitle">Story</h2>
+          <div class="StoryBtns">
+            <button id="btnSpeak" class="Btn BtnPrimary" type="button" disabled>Listen all</button>
+            <button id="btnStopSpeech" class="Btn" type="button" disabled>Stop</button>
+            <button id="btnPause" class="Btn" type="button" disabled>Pause</button>
+            <button id="btnResume" class="Btn" type="button" disabled>Resume</button>
+          </div>
+        </div>
+        <div id="storySource" class="Hint"></div>
+        <div id="storySections"></div>
+      </div>
+
+      <div class="Card">
+        <button id="btnLocate" class="Btn BtnPrimary" type="button">GPS</button>
+        <button id="btnStop" class="Btn" type="button" disabled>Stop</button>
+        <label class="Toggle">
+          <input id="autoMode" type="checkbox"/>
+          Auto
+        </label>
+      </div>
+    </div>
+
+    <div class="MapPanel">
+      <div id="map" class="Map"></div>
+    </div>
+  </div>
+
+  <!-- твій sticky player створюється app.js -->
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='app.js') }}?v={{ ASSET_VER }}"></script>
+{% endblock %}

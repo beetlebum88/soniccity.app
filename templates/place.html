@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% set page_lang_slug = CURRENT_LANG_PUBLIC if CURRENT_LANG_PUBLIC is defined else lang %}
+  {% set route_prefix = "/" if page_lang_slug == "en" else "/" ~ page_lang_slug ~ "/" %}
+
+  <section class="ux-breadcrumbs">
+    <div class="container">
+      <nav aria-label="Breadcrumb">
+        <a href="{{ NAV_HOME_URL }}">{{ T["common_home"] }}</a>
+        <span aria-hidden="true">/</span>
+        <a href="{{ route_prefix }}{{ country.slug }}">{{ country.name }}</a>
+        <span aria-hidden="true">/</span>
+        <a href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}">{{ city.name }}</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ place.name }}</span>
+      </nav>
+    </div>
+  </section>
+
+  <section class="ux-entityHero ux-placeHero">
+    <div class="container">
+      <article class="ux-entityHeroGrid ux-placeHeroGrid">
+        <div class="ux-entityHeroMedia">
+          <img src="/media/place/{{ lang }}/{{ country.slug }}/{{ city.citySlug }}/{{ place.slug }}" alt="{{ place.name }}" loading="eager" decoding="async"/>
+        </div>
+        <div class="ux-entityHeroCopy">
+          <span class="ux-badge">{{ T["type_place"] }}</span>
+          <h1>{{ T["place_hero_title_tpl"].replace("{place}", place.name) }}</h1>
+          <p>{{ T["place_hero_sub_tpl"].replace("{place}", place.name).replace("{city}", city.name).replace("{country}", country.name) }}</p>
+          <div class="ux-heroMeta">
+            <span>{{ city.name }}</span>
+            <span>{{ country.name }}</span>
+            <span>{{ lang|upper }}</span>
+            <span>{{ T["badge_audio"] }}</span>
+          </div>
+          {% set guide_entity_type = "place" %}
+          {% set guide_entity_id = "place:" ~ country.slug ~ ":" ~ city.citySlug ~ ":" ~ place.slug %}
+          {% set guide_save_url = route_prefix ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ place.slug ~ "#stickyPlayer" %}
+          {% set guide_is_saved = IS_GUIDE_SAVED(guide_entity_type, guide_entity_id, guide_save_url) %}
+          <div class="ux-actions">
+            <a class="btn btn-primary ct-primaryBtn" href="#storyPanel">{{ T["hero_start_listening"] }}</a>
+            {% if IS_LOGGED_IN %}
+              <button class="btn btn-primary ct-primaryBtn ux-heroSaveBtn{% if guide_is_saved %} is-saved{% endif %}"
+                      type="button"
+                      data-hero-save-guide
+                      data-entity-type="{{ guide_entity_type }}"
+                      data-entity-id="{{ guide_entity_id }}"
+                      data-title="{{ place.name }}"
+                      data-city="{{ city.name }}"
+                      data-country="{{ country.name }}"
+                      data-page-url="{{ guide_save_url }}"
+                      data-image="/media/place/{{ lang }}/{{ country.slug }}/{{ city.citySlug }}/{{ place.slug }}">
+                {{ T["hero_saved"] if guide_is_saved else T["player_save"] }}
+              </button>
+            {% else %}
+              <a class="btn btn-primary ct-primaryBtn ux-heroSaveBtn" href="/?login=1">{{ T["player_save"] }}</a>
+            {% endif %}
+            {% if comments_context and comments_context.enabled %}
+              <button class="ux-commentOpenBtn ux-commentOpenBtnHero" type="button" data-comment-open>
+                {{ comments_context.texts.button }}
+              </button>
+            {% endif %}
+            <a class="btn btn-outline-dark ct-secondaryBtn" href="#placeMap">{{ T["place_show_on_map"] }}</a>
+          </div>
+          <div class="ux-readyLine">{{ T["place_audio_ready_zero"] }}</div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="ux-detailNav" aria-label="{{ place.name }} sections">
+    <div class="container">
+      <a href="#storyPanel">{{ T["badge_audio"] }}</a>
+      <a href="#placeMap">{{ T["common_map"] }}</a>
+      <a href="#practicalInfo">{{ T["place_practical_info"] }}</a>
+      <a href="#nearbyPlaces">{{ T["nearby_places"] }}</a>
+    </div>
+  </section>
+
+  <section class="ux-section ux-guideMainSection">
+    <div class="container">
+      <div class="ux-guideLayout ux-placeLayout">
+        <main class="ux-guideMain">
+          <article class="ux-storyCard ux-storyCardLarge" id="storyPanel">
+            <div class="ct-panelKicker">
+              <span>{{ T["badge_audio"] }}</span>
+              <small>{{ T["place_progress_note_tpl"].replace("{place}", place.name) }}</small>
+            </div>
+            <div id="status" class="ag-status ux-inlineStatus"></div>
+            <div class="ux-storyHead">
+              <div>
+                <span class="ux-kicker">{{ T["city_playlist_kicker"] }}</span>
+                <h2 id="storyTitle">{{ T["place_playlist_title_tpl"].replace("{place}", place.name) }}</h2>
+                <p>{{ T["place_playlist_sub"] }}</p>
+                <div class="ux-metaLine">
+                  {{ T["nav_language"] }}: <b id="activeLang">{{ lang|upper }}</b>
+                  <span id="langHintWrap" hidden>(<span id="langHint"></span>)</span>
+                </div>
+              </div>
+              <div class="ag-voiceToggle" role="group" aria-label="{{ T['voice_label'] }}">
+                <button id="voiceFemale" class="ag-voiceBtn" type="button" data-voice="female" aria-pressed="true">{{ T["voice_female"] }}</button>
+                <button id="voiceMale" class="ag-voiceBtn" type="button" data-voice="male" aria-pressed="false">{{ T["voice_male"] }}</button>
+              </div>
+            </div>
+            <div class="ux-playerActions">
+              <button id="btnSpeak" class="btn btn-primary btn-sm px-3" type="button" disabled>{{ T["listen_all"] }}</button>
+              <button id="btnStopSpeech" class="btn btn-outline-dark btn-sm px-3" type="button" disabled>{{ T["stop"] }}</button>
+              <button id="btnPause" class="btn btn-outline-dark btn-sm px-3" type="button" disabled>{{ T["pause"] }}</button>
+              <button id="btnResume" class="btn btn-outline-dark btn-sm px-3" type="button" disabled>{{ T["resume"] }}</button>
+            </div>
+            {% include "_audio_rating.html" %}
+            <div id="storySource" class="ux-metaLine"></div>
+            <div id="storySections" class="ag-outline ux-playlist">
+              <div class="ux-loadingSkeleton" aria-label="{{ T["player_loading"] }}"></div>
+            </div>
+          </article>
+
+          <section class="ux-sectionInner">
+            <div class="ux-sectionHead">
+              <span class="ux-kicker">{{ T["common_about"] }}</span>
+              <h2>{{ T["place_about_title_tpl"].replace("{place}", place.name) }}</h2>
+            </div>
+            <article class="ux-textBlock">
+              <p>{{ T["place_about_text_tpl"].replace("{place}", place.name).replace("{city}", city.name) }}</p>
+            </article>
+          </section>
+        </main>
+
+        <aside class="ux-guideSide">
+          <section class="ux-mapCard" id="placeMap">
+            <div class="ct-mapTopbar">
+              <span>{{ T["nav_map"] }}</span>
+              <small>{{ place.name }}</small>
+            </div>
+            <div id="map" class="ag-map ux-entityMap" aria-label="Place map"></div>
+            <div class="ct-mapInfoDock ux-selectedMarkerCard">
+              <div>
+                <b>{{ place.name }}</b>
+                <small>{{ city.name }}, {{ country.name }}</small>
+              </div>
+              <button id="btnOpenFullMapDock" class="btn btn-primary btn-sm" type="button">{{ T["map_open_full"] }}</button>
+            </div>
+          </section>
+
+          <section class="ux-sideCard" id="practicalInfo">
+            <h3>{{ T["place_practical_info"] }}</h3>
+            <dl class="ux-infoList">
+              <div><dt>{{ T["common_category"] }}</dt><dd>{{ place.categoryLabel if place.categoryLabel is defined else T["type_place"] }}</dd></div>
+              <div><dt>{{ T["type_city"] }}</dt><dd>{{ city.name }}</dd></div>
+              <div><dt>{{ T["type_country"] }}</dt><dd>{{ country.name }}</dd></div>
+              <div><dt>{{ T["label_language"] }}</dt><dd>{{ lang|upper }}</dd></div>
+            </dl>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  {% include "_admin_public_content.html" %}
+
+  {% if places %}
+    <section class="ux-section" id="nearbyPlaces">
+      <div class="container">
+        <div class="ux-sectionHead ux-sectionHeadRow">
+          <div>
+            <span class="ux-kicker">{{ T["nearby_places"] }}</span>
+            <h2>{{ T["place_more_places_tpl"].replace("{city}", city.name) }}</h2>
+          </div>
+          <a href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}">{{ T["place_open_city_guide"] }}</a>
+        </div>
+        <div class="ux-cardGrid ux-placeGrid">
+          {% for p in places[:12] %}
+            <article class="ux-guideCard ux-placeGuideCard">
+              <a class="ux-cardImageLink" href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}" aria-label="Open {{ p.name }} audio guide">
+                <img src="/media/place/{{ lang }}/{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}"
+                     alt="{{ p.name }}" loading="lazy" decoding="async"/>
+              </a>
+              <div class="ux-guideCardBody">
+                <span class="ux-badge">{{ T["badge_audio"] }}</span>
+                <h3><a class="ux-cardTitleLink" href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}">{{ p.name }}</a></h3>
+                <p>{{ T["place_nearby_text_tpl"].replace("{city}", city.name) }}</p>
+                <div class="ux-cardMeta">
+                  <span>{{ T["badge_audio"] }}</span>
+                  <span>{{ T["place_nearby_meta"] }}</span>
+                </div>
+                <span class="ux-cardCta">{{ T["common_listen"] }}</span>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {% include "_auto_faq.html" %}
+  {% if comments_context is not defined and PUBLIC_COMMENTS_CONTEXT is defined %}
+    {% set comments_context = PUBLIC_COMMENTS_CONTEXT("place_page", "place:" ~ country.slug ~ ":" ~ city.citySlug ~ ":" ~ place.slug, place.name, URL_PLACE(lang, country.slug, city.citySlug, place.slug), lang, admin_content) %}
+  {% endif %}
+  {% include "_comments.html" %}
+
+  {% set map_places = [place] + (places if places is defined else []) %}
+  <section id="cityMapOverlay" class="ag-fullMapOverlay" role="dialog" aria-modal="true" aria-labelledby="cityMapOverlayTitle" hidden>
+    <div class="ag-fullMapTopbar">
+      <button id="btnCloseFullMap" class="ag-mapAction" type="button" aria-label="{{ T["map_close"] }}">{{ T["map_close"] }}</button>
+      <div>
+        <span class="ux-kicker">{{ T["map_audio"] }}</span>
+        <h2 id="cityMapOverlayTitle">{{ T["map_places_near_tpl"].replace("{city}", city.name) }}</h2>
+      </div>
+      <div class="ag-fullMapTopActions">
+        <button id="btnMapSheetToggle" class="ag-mapAction" type="button">{{ T["nav_places"] }}</button>
+        <button id="btnFullUseLocation" class="ag-mapAction ag-mapActionPrimary" type="button">{{ T["map_use_location"] }}</button>
+      </div>
+    </div>
+    <div class="ag-fullMapShell">
+      <aside class="ag-mapSidebar" aria-label="{{ city.name }} places">
+        <button id="cityMapSheetHandle" class="ag-mapSheetHandle" type="button" aria-label="{{ T["map_change_panel"] }}">
+          <span></span>
+        </button>
+        <article id="cityMapMiniPlayer" class="ag-mapMiniPlayer">
+          <div>
+            <span>{{ T["badge_audio"] }}</span>
+            <strong id="cityMapNowTitle">{{ T["player_choose_story"] }}</strong>
+            <small id="cityMapNowMeta">{{ T["map_select_place_play"] }}</small>
+          </div>
+          <button id="cityMapPlayerToggle" class="ag-mapAction ag-mapActionPrimary" type="button">{{ T["common_play"] }}</button>
+          <div class="ag-mapMiniProgress" aria-hidden="true"><i id="cityMapMiniProgress"></i></div>
+        </article>
+        <article id="cityMapPlaceCard" class="ag-mapSelectedCard" hidden>
+          <img id="cityMapPlaceImg" src="" alt="" loading="lazy" decoding="async"/>
+          <div>
+            <span id="cityMapPlaceCategory" class="ux-badge">Landmark</span>
+            <h3 id="cityMapPlaceName">Select a place</h3>
+            <p id="cityMapPlaceMeta">{{ city.name }}, {{ country.name }}</p>
+            <div id="cityMapRouteInfo" class="ag-routeInfo" hidden></div>
+            <button id="cityMapClearRoute" class="ag-mapAction ag-mapActionQuiet" type="button" hidden>{{ T["map_clear_route"] }}</button>
+            <div class="ag-mapPopupActions">
+              <button id="cityMapPlayPlace" class="ag-mapAction ag-mapActionPrimary" type="button">{{ T["listen_all"] }}</button>
+              <button id="cityMapRoutePlace" class="ag-mapAction" type="button">{{ T["map_route"] }}</button>
+              <a id="cityMapOpenPlace" class="ag-mapAction" href="#">{{ T["common_details"] }}</a>
+            </div>
+          </div>
+        </article>
+        <article id="cityMapEmptyCard" class="ag-mapEmptyCard">
+          <h3>{{ T["place_select_landmark"] }}</h3>
+          <p>{{ T["place_select_landmark_sub"] }}</p>
+        </article>
+        <div class="ag-mapSidebarHead">
+          <label for="cityMapSearch">{{ T["place_search_places"] }}</label>
+          <input id="cityMapSearch" type="search" placeholder="{{ T["place_search_place"] }}" autocomplete="off"/>
+        </div>
+        <div class="ag-mapFilters" aria-label="Category filters">
+          <button type="button" data-map-filter="all" class="is-active">{{ T["common_all"] }}</button>
+          <button type="button" data-map-filter="museum">{{ T["filter_museums"] }}</button>
+          <button type="button" data-map-filter="landmark">{{ T["filter_landmarks"] }}</button>
+          <button type="button" data-map-filter="church">{{ T["filter_churches"] }}</button>
+          <button type="button" data-map-filter="park">{{ T["filter_parks"] }}</button>
+          <button type="button" data-map-filter="monument">{{ T["filter_monuments"] }}</button>
+          <button type="button" data-map-filter="viewpoint">{{ T["filter_viewpoints"] }}</button>
+        </div>
+        <ul class="ag-mapPlaceList" id="cityMapPlaceList">
+          {% for p in map_places[:30] %}
+            {% set place_url = route_prefix ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
+            {% set place_img = "/media/place/" ~ lang ~ "/" ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
+            {% set place_category = p.categoryLabel if p.categoryLabel is defined and p.categoryLabel else (p.category if p.category is defined and p.category else T["category_landmark"]) %}
+            <li data-place-row="{{ p.slug }}" data-place-category="{{ place_category|lower }}">
+              <button class="ag-mapPlaceSelect" type="button" data-place-select="{{ p.slug }}" aria-label="{{ T["hero_open_map"] }}: {{ p.name }}">
+                <img src="{{ place_img }}" alt="{{ p.name }}" loading="lazy" decoding="async"/>
+                <span>
+                  <b>{{ p.name }}</b>
+                  <small>{{ place_category }} · {{ city.name }}</small>
+                </span>
+              </button>
+              <button class="ag-mapPlacePlay" type="button" data-place-play="{{ p.slug }}" aria-label="{{ T["listen_all"] }} {{ p.name }}">{{ T["common_play"] }}</button>
+              <button class="ag-mapPlaceRoute" type="button" data-place-route="{{ p.slug }}" aria-label="{{ T["map_route"] }} {{ p.name }}">{{ T["map_route"] }}</button>
+            </li>
+          {% endfor %}
+        </ul>
+      </aside>
+      <div class="ag-fullMapStage">
+        <div id="cityFullMap" class="ag-fullMapCanvas" aria-label="Fullscreen map of {{ city.name }}"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    window.CITY_PAGE = {
+      id: {{ city.id|tojson }},
+      name: {{ city.name|tojson }},
+      citySlug: {{ city.citySlug|tojson }},
+      countryName: {{ country.name|tojson }},
+      countryCode: {{ country.code|tojson }},
+      countrySlug: {{ country.slug|tojson }},
+      lat: {{ city.lat|tojson }},
+      lon: {{ city.lon|tojson }},
+      wikiTitle: {{ city.wikiTitle|tojson }}
+    };
+    window.PLACE_PAGE = {
+      id: {{ (city.id ~ "_place_" ~ place.slug)|tojson }},
+      name: {{ place.name|tojson }},
+      placeSlug: {{ place.slug|tojson }},
+      cityName: {{ city.name|tojson }},
+      citySlug: {{ city.citySlug|tojson }},
+      countryName: {{ country.name|tojson }},
+      countryCode: {{ country.code|tojson }},
+      countrySlug: {{ country.slug|tojson }},
+      lat: {{ city.lat|tojson }},
+      lon: {{ city.lon|tojson }},
+      wikiTitle: {{ place.name|tojson }}
+    };
+    window.CITY_PLACES = {{ ([{"name": place.name, "slug": place.slug, "countrySlug": country.slug, "citySlug": city.citySlug}] + (places if places is defined else []))|tojson }};
+    window.APP_LANG = {{ page_lang_slug|tojson }};
+    window.APP_LANG_INTERNAL = {{ lang|tojson }};
+    window.WIKI_LANG = {{ wiki_lang|tojson }};
+    window.SPEECH_LANG = {{ speech_lang|tojson }};
+    window.I18N = {{ T|tojson }};
+  </script>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='app.js') }}?v={{ ASSET_VER }}"></script>
+  <script src="{{ url_for('static', filename='place_boot.js') }}?v={{ ASSET_VER }}"></script>
+  <script src="{{ url_for('static', filename='city_map.js') }}?v={{ ASSET_VER }}"></script>
+{% endblock %}

@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% set page_lang_slug = CURRENT_LANG_PUBLIC if CURRENT_LANG_PUBLIC is defined else lang %}
+  {% set route_prefix = "/" if page_lang_slug == "en" else "/" ~ page_lang_slug ~ "/" %}
+
+  <section class="ux-breadcrumbs">
+    <div class="container">
+      <nav aria-label="Breadcrumb">
+        <a href="{{ NAV_HOME_URL }}">{{ T["common_home"] }}</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ country.name }}</span>
+      </nav>
+    </div>
+  </section>
+
+  <section class="ux-entityHero ux-countryHero">
+    <div class="container">
+      <article class="ux-entityHeroGrid">
+        <div class="ux-entityHeroCopy">
+          <span class="ux-badge">{{ T["type_country"] }}</span>
+          <h1>{{ T["country_hero_title_tpl"].replace("{country}", country.name) }}</h1>
+          <p>{{ T["country_hero_sub_tpl"].replace("{country}", country.name) }}</p>
+          <div class="ux-heroMeta">
+            <span>{{ country_city_total }} {{ T["stat_cities"] }}</span>
+            <span>{{ country_place_total }} {{ T["stat_places"] }}</span>
+            <span>{{ lang|upper }}</span>
+          </div>
+          {% set guide_entity_type = "country" %}
+          {% set guide_entity_id = "country:" ~ country.slug %}
+          {% set guide_save_url = route_prefix ~ country.slug ~ "#stickyPlayer" %}
+          {% set guide_is_saved = IS_GUIDE_SAVED(guide_entity_type, guide_entity_id, guide_save_url) %}
+          <div class="ux-actions">
+            <a class="btn btn-primary ct-primaryBtn" href="#storyPanel">{{ T["hero_start_listening"] }}</a>
+            {% if IS_LOGGED_IN %}
+              <button class="btn btn-primary ct-primaryBtn ux-heroSaveBtn{% if guide_is_saved %} is-saved{% endif %}"
+                      type="button"
+                      data-hero-save-guide
+                      data-entity-type="{{ guide_entity_type }}"
+                      data-entity-id="{{ guide_entity_id }}"
+                      data-title="{{ country.name }}"
+                      data-country="{{ country.name }}"
+                      data-page-url="{{ guide_save_url }}"
+                      data-image="/media/country/{{ lang }}/{{ country.slug }}">
+                {{ T["hero_saved"] if guide_is_saved else T["player_save"] }}
+              </button>
+            {% else %}
+              <a class="btn btn-primary ct-primaryBtn ux-heroSaveBtn" href="/?login=1">{{ T["player_save"] }}</a>
+            {% endif %}
+            {% if comments_context and comments_context.enabled %}
+              <button class="ux-commentOpenBtn ux-commentOpenBtnHero" type="button" data-comment-open>
+                {{ comments_context.texts.button }}
+              </button>
+            {% endif %}
+            <a class="btn btn-outline-dark ct-secondaryBtn" href="#countryMapWrap">{{ T["hero_open_map"] }}</a>
+          </div>
+        </div>
+        <div class="ux-entityHeroMedia">
+          <img src="/media/country/{{ lang }}/{{ country.slug }}" alt="{{ country.name }}" loading="eager" decoding="async"/>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="ux-detailNav" aria-label="{{ country.name }} sections">
+    <div class="container">
+      <a href="#countryMapWrap">{{ T["common_map"] }}</a>
+      <a href="#countryCities">{{ T["country_largest_cities"] }}</a>
+      {% if top_places %}<a href="#countryTopPlaces">{{ T["top_places"] }}</a>{% endif %}
+      <a href="#countryAbout">{{ T["common_about"] }}</a>
+      <a href="#relatedCountries">{{ T["common_related"] }}</a>
+    </div>
+  </section>
+
+  <section class="ux-section ux-guideMainSection" id="countryMapWrap">
+    <div class="container">
+      <div class="ux-guideLayout ux-countryLayout">
+        <main class="ux-guideMain">
+          <section class="ux-mapCard ux-mapCardLarge">
+            <div class="ct-mapTopbar">
+              <span>{{ T["country_map_title_tpl"].replace("{country}", country.name) }}</span>
+              <small>{{ country_city_total }} {{ T["stat_cities"] }} · {{ country_place_total }} {{ T["stat_places"] }}</small>
+            </div>
+            <div id="countryMap" class="ag-map ux-countryMap" aria-label="Country map"></div>
+            <div class="ct-mapInfoDock ux-selectedMarkerCard">
+              <div>
+                <b>{{ country.name }}</b>
+                <small>{{ country_city_total }} {{ T["stat_cities"] }}</small>
+              </div>
+              <a class="btn btn-primary btn-sm" href="#countryCities">{{ T["country_largest_cities"] }}</a>
+            </div>
+          </section>
+
+          <article class="ux-storyCard ux-storyCardLarge" id="storyPanel">
+            <div class="ct-panelKicker">
+              <span>{{ T["badge_audio"] }}</span>
+              <small>{{ T["country_lead"] }}</small>
+            </div>
+            <div id="status" class="ag-status ux-inlineStatus"></div>
+            <div class="ux-storyHead">
+              <div>
+                <span class="ux-kicker">{{ T["country_guide"] }}</span>
+              <h2 id="storyTitle">{{ T["country_listen_tpl"].replace("{country}", country.name) }}</h2>
+              <p>{{ T["country_story_sub"] }}</p>
+                <div class="ux-metaLine">
+                  {{ T["nav_language"] }}: <b id="activeLang">{{ lang|upper }}</b>
+                  <span id="langHintWrap" hidden>(<span id="langHint"></span>)</span>
+                </div>
+              </div>
+              <div class="ag-voiceToggle" role="group" aria-label="{{ T['voice_label'] }}">
+                <button id="voiceFemale" class="ag-voiceBtn" type="button" data-voice="female" aria-pressed="true">{{ T["voice_female"] }}</button>
+                <button id="voiceMale" class="ag-voiceBtn" type="button" data-voice="male" aria-pressed="false">{{ T["voice_male"] }}</button>
+              </div>
+            </div>
+            <div class="ux-playerActions">
+              <button id="btnSpeak" class="btn btn-primary btn-sm px-3" type="button" disabled>{{ T["listen_all"] }}</button>
+              <button id="btnStopSpeech" class="btn btn-outline-dark btn-sm px-3" type="button" disabled>{{ T["stop"] }}</button>
+              <button id="btnPause" class="btn btn-outline-dark btn-sm px-3" type="button" disabled>{{ T["pause"] }}</button>
+              <button id="btnResume" class="btn btn-outline-dark btn-sm px-3" type="button" disabled>{{ T["resume"] }}</button>
+            </div>
+            {% include "_audio_rating.html" %}
+            <div id="storySource" class="ux-metaLine"></div>
+            <div id="storySections" class="ag-outline ux-playlist">
+              <div class="ux-loadingSkeleton" aria-label="Loading audio sections"></div>
+            </div>
+          </article>
+        </main>
+
+        <aside class="ux-guideSide">
+          <section class="ux-sideCard">
+          <h3>{{ T["country_facts_tpl"].replace("{country}", country.name) }}</h3>
+            <dl class="ux-infoList">
+              <div><dt>{{ T["stat_cities"] }}</dt><dd>{{ country_city_total }}</dd></div>
+              <div><dt>{{ T["stat_places"] }}</dt><dd>{{ country_place_total }}</dd></div>
+              <div><dt>{{ T["label_language"] }}</dt><dd>{{ lang|upper }}</dd></div>
+              <div><dt>{{ T["type_country"] }}</dt><dd>{{ T["badge_audio"] }}</dd></div>
+            </dl>
+          </section>
+
+          <section class="ux-sideCard">
+            <h3>{{ T["country_popular_cities_tpl"].replace("{country}", country.name) }}</h3>
+            <div class="ux-miniList">
+              {% for c in cities[:5] %}
+                <a href="{{ route_prefix }}{{ c.countrySlug }}/{{ c.citySlug }}">
+                  <img src="/media/city/{{ lang }}/{{ c.countrySlug }}/{{ c.citySlug }}" alt="{{ c.name }}" loading="lazy" decoding="async"/>
+                  <span>{{ c.name }}</span>
+                </a>
+              {% endfor %}
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="ux-section" id="countryCities">
+    <div class="container">
+      <div class="ux-sectionHead ux-sectionHeadRow">
+        <div>
+          <span class="ux-kicker">{{ T["country_cities_kicker"] }}</span>
+          <h2>{{ T["country_city_guides_tpl"].replace("{country}", country.name) }}</h2>
+        </div>
+        <span class="ux-countPill">{{ country_city_total }} {{ T["stat_cities"] }}</span>
+      </div>
+      <div class="ux-cardGrid ux-cityGrid">
+        {% for c in cities[:12] %}
+          <article class="ux-guideCard ux-cityGuideCard">
+            <a class="ux-cardImageLink" href="{{ route_prefix }}{{ c.countrySlug }}/{{ c.citySlug }}" aria-label="Open {{ c.name }} audio guide">
+              <img src="/media/city/{{ lang }}/{{ c.countrySlug }}/{{ c.citySlug }}" alt="{{ c.name }}" loading="lazy" decoding="async"/>
+            </a>
+            <div class="ux-guideCardBody">
+              <a class="ux-badge ux-badgeLink" href="{{ route_prefix }}{{ country.slug }}" aria-label="Open {{ country.name }} audio guides">{{ country.name }}</a>
+              <h3><a class="ux-cardTitleLink" href="{{ route_prefix }}{{ c.countrySlug }}/{{ c.citySlug }}">{{ c.name }}</a></h3>
+              <p>{{ T["city_progress_note_tpl"].replace("{city}", c.name) }}</p>
+              <div class="ux-cardMeta">
+                {% if c.population %}<span>{{ "{:,}".format(c.population) }} {{ T["stat_population"] }}</span>{% endif %}
+                {% if c.placesCount is defined and c.placesCount %}<span>{{ c.placesCount }} {{ T["nav_places"]|lower }}</span>{% endif %}
+              </div>
+              <span class="ux-cardCta">{{ T["common_open"] }}</span>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {% if top_places %}
+    <section class="ux-section" id="countryTopPlaces">
+      <div class="container">
+        <div class="ux-sectionHead">
+          <span class="ux-kicker">{{ T["top_places"] }}</span>
+          <h2>{{ T["country_top_places_title_tpl"].replace("{country}", country.name) }}</h2>
+          <p class="ux-sectionSub">{{ T["country_top_places_sub_tpl"].replace("{country}", country.name) }}</p>
+        </div>
+        <div class="ux-placeCatalogGrid">
+          {% for p in top_places %}
+            <article class="ux-placeCatalogCard">
+              <a class="ux-placeCatalogLink" href="{{ route_prefix }}{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}">
+                <img src="/media/place/{{ lang }}/{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}" alt="{{ p.name }}" loading="lazy" decoding="async"/>
+                <span>
+                  <small>{{ p.categoryLabel if p.categoryLabel is defined else p.category }} · {{ p.cityName }}</small>
+                  <b>{{ p.name }}</b>
+                  <em>{{ p.countryName }}</em>
+                </span>
+              </a>
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="ux-section ux-seoBlock" id="countryAbout">
+    <div class="container">
+      <article class="ux-textBlock">
+        <span class="ux-kicker">{{ T["country_about_kicker"] }}</span>
+        <h2>{{ T["country_about_title_tpl"].replace("{country}", country.name) }}</h2>
+        <p>{{ T["country_about_p1_tpl"].replace("{country}", country.name) }}</p>
+        <p>{{ T["country_about_p2_tpl"].replace("{country}", country.name) }}</p>
+      </article>
+    </div>
+  </section>
+
+  {% include "_admin_public_content.html" %}
+
+  <section class="ux-section" id="relatedCountries">
+    <div class="container">
+      <div class="ux-sectionHead">
+        <span class="ux-kicker">{{ T["more_countries"] }}</span>
+        <h2>{{ T["continue_exploring_europe"] }}</h2>
+      </div>
+      <div class="ux-countryPills">
+        {% for c in NAV_EUROPE_COUNTRIES[:18] %}
+          {% if c.slug != country.slug %}
+            <a class="ct-countryPill" href="{{ '/' ~ c.slug if page_lang_slug == 'en' else '/' ~ page_lang_slug ~ '/' ~ c.slug }}">
+              <img class="Flag" src="{{ c.flagUrl }}" alt="{{ c.name }} flag" loading="lazy"/>
+              <span>{{ c.name }}</span>
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {% include "_auto_faq.html" %}
+  {% if comments_context is not defined and PUBLIC_COMMENTS_CONTEXT is defined %}
+    {% set comments_context = PUBLIC_COMMENTS_CONTEXT("country_page", "country:" ~ country.slug, country.name, URL_COUNTRY(lang, country.slug), lang, admin_content) %}
+  {% endif %}
+  {% include "_comments.html" %}
+
+  <script>
+    window.COUNTRY_PAGE = {
+      id: {{ ("country_" ~ country.slug)|tojson }},
+      kind: "country",
+      lang: {{ lang|tojson }},
+      name: {{ country.name|tojson }},
+      countryName: {{ country.name|tojson }},
+      countryCode: {{ country.code|tojson }},
+      countrySlug: {{ country.slug|tojson }},
+      citySlug: "__country__",
+      centerLat: {{ center_lat|tojson }},
+      centerLon: {{ center_lon|tojson }},
+      lat: {{ center_lat|tojson }},
+      lon: {{ center_lon|tojson }},
+      cities: {{ cities|tojson }}
+    };
+    window.I18N = {{ T|tojson }};
+    window.APP_LANG = {{ page_lang_slug|tojson }};
+    window.APP_LANG_INTERNAL = {{ lang|tojson }};
+  </script>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='app.js') }}?v={{ ASSET_VER }}"></script>
+  <script src="{{ url_for('static', filename='country.js') }}?v={{ ASSET_VER }}"></script>
+  <script src="{{ url_for('static', filename='country_boot.js') }}?v={{ ASSET_VER }}"></script>
+{% endblock %}

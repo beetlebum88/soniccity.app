@@ -1,0 +1,45 @@
+{% if audio_rating %}
+  <section class="ux-audioRating" id="audio-rating" aria-label="{{ T['rating_current'] if T is defined else 'Audio guide review' }}">
+    <div class="ux-audioRatingCopy">
+      <span class="ux-kicker">{{ T["rating_review"] if T is defined else "Review" }}</span>
+      <h3>{{ T["rating_title"] if T is defined else "Rate this audio guide" }}</h3>
+      <p>{{ T["rating_help"] if T is defined else "Help travelers choose useful SonicCity audio stories." }}</p>
+      <p class="ux-ratingSummary" aria-label="{{ T['rating_current'] if T is defined else 'Current audio guide rating' }}">
+        <span class="ux-starMeter" aria-hidden="true">
+          <span class="ux-starMeterBase">★★★★★</span>
+          <span class="ux-starMeterFill" style="width: {{ audio_rating.ratingPercent or 0 }}%">★★★★★</span>
+        </span>
+        {% if audio_rating.ratings %}
+          <span>{{ "%.1f"|format(audio_rating.ratingAverage) }} / 5 · {{ audio_rating.ratings }} {{ T["rating_count"] if T is defined else "ratings" }}</span>
+        {% else %}
+          <span>{{ T["rating_no_ratings"] if T is defined else "No ratings yet" }}</span>
+        {% endif %}
+      </p>
+    </div>
+    <div class="ux-audioRatingActions">
+      <form method="post" action="/audio-rating" class="ux-ratingForm ux-audioRatingForm" data-auto-rating-form>
+        <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}"/>
+        <input type="hidden" name="entityType" value="{{ audio_rating_entity_type }}"/>
+        <input type="hidden" name="countrySlug" value="{{ audio_rating_country_slug }}"/>
+        <input type="hidden" name="citySlug" value="{{ audio_rating_city_slug }}"/>
+        <input type="hidden" name="placeSlug" value="{{ audio_rating_place_slug }}"/>
+        <input type="hidden" name="language" value="{{ lang }}"/>
+        <input type="hidden" name="returnTo" value="{{ request.path }}#audio-rating"/>
+        <span class="ux-ratingLabel">{{ T["rating_your_rating"] if T is defined else "Your rating" }}</span>
+        <div class="ux-starInput">
+          {% for value in [5, 4, 3, 2, 1] %}
+            {% set input_id = "audio-rating-" ~ audio_rating.key|replace(':', '-') ~ "-" ~ value %}
+            <input type="radio" id="{{ input_id }}" name="rating" value="{{ value }}" required/>
+            <label for="{{ input_id }}" aria-label="{{ value }} stars">★</label>
+          {% endfor %}
+        </div>
+        <small class="ux-ratingAutoHint" data-auto-rating-status>{{ T["rating_tap_star"] if T is defined else "Tap a star to submit." }}</small>
+      </form>
+      {% if comments_context and comments_context.enabled %}
+        <button class="ux-commentOpenBtn ux-audioRatingCommentBtn" type="button" data-comment-open>
+          {{ comments_context.texts.button }}
+        </button>
+      {% endif %}
+    </div>
+  </section>
+{% endif %}

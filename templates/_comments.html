@@ -1,0 +1,93 @@
+{% if comments_context and comments_context.enabled %}
+  <section class="ux-section ux-commentsSection" id="comments">
+    <div class="container">
+      <article class="ux-textBlock ux-commentsBlock">
+        <div class="ux-commentsHead">
+          <div>
+            <span class="ux-kicker">{{ comments_context.texts.kicker }}</span>
+            <h2>{{ comments_context.texts.title }}</h2>
+            <p>{{ comments_context.texts.sharePrompt }}</p>
+          </div>
+          <div class="ux-commentSpark" aria-hidden="true">✦</div>
+        </div>
+        <details class="ux-commentComposer">
+          <summary class="ux-commentToggle">
+            <span>{{ comments_context.texts.button }}</span>
+          </summary>
+          <form method="post" action="/comments/submit" class="ux-commentForm" data-comment-form>
+            <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+            <input type="hidden" name="pageType" value="{{ comments_context.pageType }}">
+            <input type="hidden" name="pageId" value="{{ comments_context.pageId }}">
+            <input type="hidden" name="pageUrl" value="{{ comments_context.pageUrl }}">
+            <input type="hidden" name="pageTitle" value="{{ comments_context.pageTitle }}">
+            <input type="hidden" name="language" value="{{ comments_context.language }}">
+            <input class="ux-hpField" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <div class="ux-commentFormIntro">
+              <h3>{{ comments_context.texts.formTitle }}</h3>
+              <p>{{ comments_context.texts.privateNote }}</p>
+            </div>
+            <label><span>{{ comments_context.texts.name }}</span><input name="name" maxlength="100" value="{{ comments_context.userName }}" required></label>
+            <label><span>{{ comments_context.texts.email }}</span><input name="email" type="email" value="{{ comments_context.userEmail }}" required></label>
+            <label class="ux-commentWide">
+              <span>{{ comments_context.texts.comment }}</span>
+              <textarea name="comment" rows="5" maxlength="1000" required data-comment-counter-target></textarea>
+              <small data-comment-counter>{{ comments_context.texts.counter }}</small>
+            </label>
+            <label class="ux-checkboxField ux-commentWide"><input type="checkbox" required><span>{{ comments_context.texts.consent }}</span></label>
+            <button class="ux-commentSubmit" type="submit">{{ comments_context.texts.submit }}</button>
+          </form>
+        </details>
+
+        {% if comments_context.success %}
+          <p class="ux-commentNotice ux-commentNoticeSuccess">{{ comments_context.texts.success }}</p>
+        {% elif comments_context.rateLimited %}
+          <p class="ux-commentNotice ux-commentNoticeError">{{ comments_context.texts.rateLimited }}</p>
+        {% elif comments_context.error %}
+          <p class="ux-commentNotice ux-commentNoticeError">{{ comments_context.texts.error }}</p>
+        {% endif %}
+
+        <div class="ux-commentList">
+          {% for comment in comments_context.approved %}
+            <article class="ux-commentCard">
+              <div>
+                <strong>{{ comment.authorName }}</strong>
+                <span>{{ comment.dateLabel }}</span>
+              </div>
+              <p>{{ comment.commentHtml|safe }}</p>
+            </article>
+          {% else %}
+            <p class="ux-commentEmpty">{{ comments_context.texts.empty }}</p>
+          {% endfor %}
+        </div>
+      </article>
+    </div>
+  </section>
+  <script>
+    (function(){
+      document.querySelectorAll("[data-comment-form]").forEach(function(form){
+        var textarea = form.querySelector("[data-comment-counter-target]");
+        var counter = form.querySelector("[data-comment-counter]");
+        if (!textarea || !counter || textarea.dataset.commentCounterReady) return;
+        textarea.dataset.commentCounterReady = "1";
+        var update = function(){ counter.textContent = textarea.value.length + " / 1000"; };
+        textarea.addEventListener("input", update);
+        update();
+      });
+      document.querySelectorAll("[data-comment-open]").forEach(function(button){
+        if (button.dataset.commentOpenReady) return;
+        button.dataset.commentOpenReady = "1";
+        button.addEventListener("click", function(){
+          var section = document.getElementById("comments");
+          if (!section) return;
+          var composer = section.querySelector(".ux-commentComposer");
+          if (composer) composer.open = true;
+          section.scrollIntoView({ behavior: "smooth", block: "start" });
+          window.setTimeout(function(){
+            var first = section.querySelector("input[name='name'], textarea[name='comment']");
+            if (first) first.focus({ preventScroll: true });
+          }, 420);
+        });
+      });
+    })();
+  </script>
+{% endif %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block header_right %}
+  <a class="btn btn-primary btn-sm px-3" href="{{ NAV_MAP_URL }}">{{ T["cta_open_map"] }}</a>
+{% endblock %}
+
+{% block content %}
+  <section class="ct-pageSection ct-errorPage">
+    <div class="container">
+      <article class="ct-errorCard">
+        <span class="ct-cardStatus">{{ status_code }}</span>
+        <h1>{{ title }}</h1>
+        <p>{{ message }}</p>
+        <div class="ct-heroActions">
+          <a class="btn btn-primary ct-primaryBtn" href="{{ NAV_HOME_URL }}">{{ T["nav_home"] }}</a>
+          <a class="btn btn-outline-dark ct-secondaryBtn" href="{{ NAV_MAP_URL }}">{{ T["nav_map"] }}</a>
+        </div>
+      </article>
+    </div>
+  </section>
+{% endblock %}

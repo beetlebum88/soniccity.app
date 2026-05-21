@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{{ country_name }} – cities</title>
+  <meta name="description" content="Top cities in {{ country_name }}. Browse 50 biggest cities with population and audio guides."/>
+  <link rel="stylesheet" href="/static/site.css"/>
+</head>
+<body>
+
+<header class="Topbar">
+  <div class="TopbarInner">
+    <div class="Brand">
+      <a class="BrandLink" href="/">AudioGuide</a>
+      <span class="BrandSub">/{{ country_slug }}/</span>
+    </div>
+
+    <nav class="MegaNav">
+      <a class="NavLink" href="/">Home</a>
+
+      <div class="NavDropWide" id="navPlaces">
+        <button class="NavBtn" type="button">Places</button>
+        <div class="MegaWide" id="megaPlaces">
+          <div class="MegaWideInner">
+            <div class="DropLoading">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="TopSearch">
+      <input id="globalSearch" class="Input" type="search" placeholder="Search city or country…">
+      <div id="globalSuggest" class="Suggest" hidden></div>
+    </div>
+  </div>
+</header>
+
+<main class="WideWrap">
+  <section class="Card">
+    <div class="CardHeader">
+      <h1 class="H1">{{ country_flag }} {{ country_name }}</h1>
+      <div class="Muted">Top 50 biggest cities by population</div>
+    </div>
+
+    <div class="CardBody">
+      <div class="Grid2">
+        {% for c in top_cities %}
+          <div class="CityItemBig">
+            <a class="CityLink" href="/{{ country_slug }}/{{ c.city_slug }}/">{{ c.name }}</a>
+            <div class="Muted Small">Population: {{ c.population }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="/static/mega_places.js"></script>
+<script src="/static/search_shared.js"></script>
+<script>
+  window.SearchShared?.bindSearch({ inputId:"globalSearch", boxId:"globalSuggest", limit:14 });
+</script>
+</body>
+</html>

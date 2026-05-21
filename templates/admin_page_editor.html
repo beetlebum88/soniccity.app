@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block header_right %}
+  <form method="post" action="/admin/logout"><input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}"><button class="cms-btn cms-btn-soft" type="submit">Logout</button></form>
+{% endblock %}
+
+{% block content %}
+  <section class="cms-shell cms-editor-shell">
+    <aside class="cms-sidebar">
+      <a class="cms-brand" href="/admin"><strong>Audio Guide CMS</strong><span>{{ BRAND_NAME }}</span></a>
+      <nav class="cms-nav" aria-label="Admin navigation">
+        <a class="cms-nav-dashboard" href="/admin">Dashboard</a>
+        {% for group in admin_groups %}
+          <section class="cms-nav-group">
+            <h2>{{ group.label }}</h2>
+            {% for item in group["items"] %}<a href="{{ item.url }}" class="{% if item.active %}is-active{% endif %}">{{ item.label }}</a>{% endfor %}
+          </section>
+        {% endfor %}
+      </nav>
+    </aside>
+
+    <main class="cms-main">
+      <header class="cms-topbar">
+        <div>
+          <span class="cms-eyebrow">Page editor</span>
+          <h1>{{ current.h1 or "Edit public page" }}</h1>
+          <p>{{ page_key }} · {{ lang|upper }} · SEO text, FAQ and metadata are saved per language.</p>
+        </div>
+        <div class="cms-top-actions">
+          <a class="cms-btn cms-btn-soft" href="/admin/pages/all">Back to pages</a>
+          <a class="cms-btn cms-btn-soft" href="{{ NAV_HOME_URL }}" target="_blank" rel="noopener">View site</a>
+        </div>
+      </header>
+
+      {% if admin_msg %}<div class="cms-alert cms-alert-{{ admin_msg_kind }}">{{ admin_msg }}</div>{% endif %}
+
+      <form method="post" action="/admin/pages/edit" class="cms-card cms-editor-form" data-cms-editor-form>
+        <input type="hidden" name="csrf_token" value="{{ _csrf_token if _csrf_token is defined else '' }}">
+        <input type="hidden" name="lang" value="{{ lang }}">
+        <div class="cms-card-head cms-editor-savebar">
+          <div>
+            <h2>Basic page data</h2>
+            <span>Slug auto-generates from H1 until you edit it manually.</span>
+          </div>
+          <div class="cms-editor-save-actions">
+            <a class="cms-btn cms-btn-soft" href="{{ NAV_HOME_URL }}" target="_blank" rel="noopener">Preview</a>
+            <a class="cms-btn cms-btn-soft" href="{{ NAV_HOME_URL }}" target="_blank" rel="noopener">Open public</a>
+            <button class="cms-btn cms-btn-primary" type="submit">Save page</button>
+          </div>
+        </div>
+
+        <div class="cms-form-grid">
+          <label><span>Page type</span><select name="page_type">
+            {% for kind in ["home","country","city","place","blog","landing","static","custom"] %}
+              <option value="{{ kind }}" {% if split.type == kind %}selected{% endif %}>{{ kind }}</option>
+            {% endfor %}
+          </select></label>
+          <label><span>Status</span><select name="status">
+            {% for s in ["published","draft","scheduled","archived"] %}<option value="{{ s }}" {% if current.status == s %}selected{% endif %}>{{ s|title }}</option>{% endfor %}
+          </select></label>
+          <label><span>Country slug</span><input name="country_slug" value="{{ split.country }}"></label>
+          <label><span>City slug</span><input name="city_slug" value="{{ split.city }}"></label>
+          <label><span>Place slug</span><input name="place_slug" value="{{ split.place }}"></label>
+          <label><span>Blog/custom slug</span><input name="blog_slug" value="{{ split.blog }}"></label>
+          <label class="cms-full"><span>H1</span><input id="pageH1Input" name="page_h1" value="{{ current.h1 }}" placeholder="Valencia Audio Guide - Listen Free"></label>
+          <label class="cms-full"><span>Slug</span><input id="contentSlugInput" name="content_slug" value="{{ current.slug }}" placeholder="auto-from-h1"><input type="hidden" id="slugManualInput" name="slug_manually_edited" value="{{ '1' if current.slugManuallyEdited else '0' }}"><small id="slugManualLabel" {% if not current.slugManuallyEdited %}hidden{% endif %}>Slug edited manually.</small></label>
+        </div>
+        <div class="cms-slug-row">
+          <button class="cms-btn cms-btn-soft" id="regenerateSlugBtn" type="button">Regenerate slug from H1</button>
+          <span id="slugUrlPreview">URL preview: /{{ lang }}/{{ current.slug or "auto-slug" }}</span>
+        </div>
+
+        <nav class="cms-editor-tabs" aria-label="Page editor tabs">
+          <a href="#content" data-cms-tab="content">Content</a>
+          <a href="#seo" data-cms-tab="seo">SEO</a>
+          <a href="#seo-text" data-cms-tab="seo-text">SEO Text</a>
+          <a href="#faq" data-cms-tab="faq">FAQ</a>
+          <a href="#comments" data-cms-tab="comments">Comments</a>
+          <a href="#media" data-cms-tab="media">Media</a>
+          <a href="#audio" data-cms-tab="audio">Audio</a>
+          <a href="#settings" data-cms-tab="settings">Settings</a>
+          <a href="#advanced" data-cms-tab="advanced">Advanced</a>
+        </nav>
+
+        <div class="cms-editor-layout">
+          <div class="cms-editor-work">
+        <section id="content" class="cms-editor-panel">
+          <h2>Content</h2>
+          <p>Public raw Wikipedia text is not rendered here. Use this page editor for curated public content, SEO copy and FAQ. Audio source sections remain available in Audio / Content tools.</p>
+          <details class="cms-advancedDetails">
+            <summary>Content blocks order</summary>
+            <div class="cms-block-list">
+              {% for name in ["Hero block","Text block","Audio guide block","Map block","City info block","Nearby places block","Places grid","Cities grid","Countries grid","FAQ block","CTA block","Image gallery","SEO text block","Related guides block","Custom HTML block"] %}
+                <label><span>{{ loop.index }}</span><input name="block_order" value="{{ name }}"></label>
+              {% endfor %}
+            </div>
+            <p class="cms-note">Ordering UI is stored-ready. TODO for full arbitrary page-builder persistence: save blocks[] with drag order once the project moves from generated page templates to DB-backed blocks.</p>
+          </details>
+        </section>
+
+        <section id="seo-text" class="cms-editor-panel">
+          <div class="cms-card-head">
+            <div><h2>SEO text before FAQ</h2><span>Rendered server-side before footer and visible in HTML for Google.</span></div>
+            <label><span>Mode</span><select id="seoEditorMode" name="seo_editor_mode"><option value="html" {% if current.seoEditorMode == "html" %}selected{% endif %}>HTML</option><option value="markdown" {% if current.seoEditorMode != "html" %}selected{% endif %}>Markdown</option></select></label>
+          </div>
+          <label class="cms-check"><input type="checkbox" name="seo_text_enabled" value="1" {% if current.seoTextEnabled %}checked{% endif %}> Enable SEO text</label>
+          <div class="cms-form-grid">
+            <label><span>SEO text H2</span><input name="seo_text_title" value="{{ current.seoTextTitle }}" placeholder="Free Audio Guide for this destination"></label>
+            <label><span>Display mode</span><select name="seo_display_mode"><option value="full" {% if current.seoDisplayMode == "full" %}selected{% endif %}>Full</option><option value="collapsed" {% if current.seoDisplayMode == "collapsed" %}selected{% endif %}>Collapsed</option><option value="accordion" {% if current.seoDisplayMode == "accordion" %}selected{% endif %}>Accordion</option></select></label>
+            <label class="cms-full"><span>Short intro</span><input name="seo_text_intro" value="{{ current.seoTextIntro }}"></label>
+          </div>
+          <div data-editor-panel="html">
+            <textarea class="cms-rich-source" data-cms-rich-editor="full" data-editor-label="SEO text" name="seo_text_html_raw" rows="18">{{ current.seoTextHtmlRaw }}</textarea>
+          </div>
+          <div data-editor-panel="markdown">
+            <textarea class="cms-code" name="seo_text_markdown" rows="14">{{ current.seoTextMarkdown }}</textarea>
+          </div>
+        </section>
+
+        <section id="faq" class="cms-editor-panel">
+          <div class="cms-card-head"><div><h2>FAQ before footer</h2><span>Visible FAQ items generate FAQPage JSON-LD.</span></div></div>
+          <label class="cms-check"><input type="checkbox" name="faq_enabled" value="1" {% if current.faqEnabled %}checked{% endif %}> Enable FAQ</label>
+          <label class="cms-full"><span>FAQ H2</span><input name="faq_title" value="{{ current.faqTitle }}"></label>
+          <div class="cms-faq-rows">
+            {% set rows = current.faq if current.faq else [] %}
+            {% for i in range(12) %}
+              {% set row = rows[i] if i < rows|length else None %}
+              <article class="cms-faq-row">
+                <label><span>Order</span><input name="faq_order" value="{{ row.order if row else i + 1 }}"></label>
+                <label><span>Question</span><input name="faq_question" value="{{ row.question if row else '' }}"></label>
+                <label class="cms-check"><input type="checkbox" name="faq_visible" value="{{ i }}" {% if not row or row.visible %}checked{% endif %}> Visible</label>
+                <label class="cms-full"><span>Answer</span><textarea class="cms-rich-source" data-cms-rich-editor="compact" data-editor-label="FAQ answer {{ i + 1 }}" name="faq_answer" rows="4">{{ row.answerHtml if row else "" }}</textarea></label>
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section id="comments" class="cms-editor-panel">
+          <div class="cms-card-head">
+            <div><h2>Comments</h2><span>Public comments stay pending until moderated in the Comments section.</span></div>
+            <a class="cms-btn cms-btn-soft" href="/admin/comments?q={{ page_key|urlencode }}">Open moderation</a>
+          </div>
+          <label class="cms-check"><input type="checkbox" name="comments_enabled" value="1" {% if current.commentsEnabled %}checked{% endif %}> Enable comments on this page</label>
+          <div class="cms-inlineStats">
+            <span>{{ page_comments|selectattr("status", "equalto", "pending")|list|length }} pending</span>
+            <span>{{ page_comments|selectattr("status", "equalto", "approved")|list|length }} approved</span>
+            <span>{{ page_comments|length }} total for {{ lang|upper }}</span>
+          </div>
+          <div class="cms-compactList">
+            {% for comment in page_comments[:8] %}
+              <article>
+                <strong>{{ comment.authorName }}</strong>
+                <span>{{ comment.status|title }} · {{ comment.createdAt }}</span>
+                <p>{{ comment.commentText }}</p>
+                <a href="/admin/comments/{{ comment.id|urlencode }}">Moderate</a>
+              </article>
+            {% else %}
+              <p class="cms-note">No comments for this language version yet.</p>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section id="seo" class="cms-editor-panel">
+          <h2>SEO fields</h2>
+          <div class="cms-form-grid">
+            <label class="cms-full"><span>Meta title</span><input name="meta_title" value="{{ current.metaTitle }}"></label>
+            <label class="cms-full"><span>Meta description</span><textarea name="meta_description" rows="3">{{ current.metaDescription }}</textarea></label>
+            <label><span>Canonical mode</span><select name="canonical_mode"><option value="self" {% if current.canonicalMode == "self" %}selected{% endif %}>Self</option><option value="custom" {% if current.canonicalMode == "custom" %}selected{% endif %}>Custom</option><option value="inherited" {% if current.canonicalMode == "inherited" %}selected{% endif %}>Inherited</option></select></label>
+            <label><span>Canonical URL</span><input name="canonical_url" value="{{ current.canonicalUrl }}"></label>
+            <label class="cms-check"><input type="checkbox" name="robots_index" value="1" {% if current.robotsIndex %}checked{% endif %}> Index</label>
+            <label class="cms-check"><input type="checkbox" name="robots_follow" value="1" {% if current.robotsFollow %}checked{% endif %}> Follow</label>
+            <label><span>OG title</span><input name="og_title" value="{{ current.ogTitle }}"></label>
+            <label class="cms-full"><span>OG description</span><textarea name="og_description" rows="2">{{ current.ogDescription }}</textarea></label>
+            <label><span>Twitter title</span><input name="twitter_title" value="{{ current.twitterTitle }}"></label>
+            <label class="cms-full"><span>Twitter description</span><textarea name="twitter_description" rows="2">{{ current.twitterDescription }}</textarea></label>
+          </div>
+        </section>
+
+        <section id="media" class="cms-editor-panel">
+          <h2>Media</h2>
+          <div class="cms-form-grid">
+            <label class="cms-full"><span>Open Graph image</span><input name="og_image" value="{{ current.ogImage }}" placeholder="/static/uploads/media/image.webp"></label>
+            <label class="cms-full"><span>Twitter image</span><input name="twitter_image" value="{{ current.twitterImage }}" placeholder="/static/uploads/media/image.webp"></label>
+          </div>
+          <p class="cms-note">Use Media Library for uploads. This tab only assigns page-level social images.</p>
+        </section>
+
+        <section id="audio" class="cms-editor-panel">
+          <h2>Audio</h2>
+          <p class="cms-note">Audio generation, uploads and replacement files are managed in the Audio section. This page keeps the audio status separate from SEO copy so the editor stays compact.</p>
+          <a class="cms-btn cms-btn-soft" href="/admin/audio/files">Open Audio Manager</a>
+        </section>
+
+        <section id="settings" class="cms-editor-panel">
+          <h2>Settings</h2>
+          <div class="cms-form-grid">
+            <label class="cms-check"><input type="checkbox" name="sitemap_included" value="1" {% if current.sitemapIncluded %}checked{% endif %}> Include in sitemap when indexable</label>
+          </div>
+          <h3>301 / 302 redirect</h3>
+          <div class="cms-form-grid">
+            <label class="cms-check"><input type="checkbox" name="redirect_enabled" value="1" {% if current.redirectEnabled %}checked{% endif %}> Redirect enabled</label>
+            <label><span>Redirect type</span><select name="redirect_type"><option value="301" {% if current.redirectType == "301" %}selected{% endif %}>301</option><option value="302" {% if current.redirectType == "302" %}selected{% endif %}>302</option><option value="307" {% if current.redirectType == "307" %}selected{% endif %}>307</option><option value="308" {% if current.redirectType == "308" %}selected{% endif %}>308</option></select></label>
+            <label class="cms-full"><span>Target URL</span><input name="redirect_target" value="{{ current.redirectTarget }}"></label>
+            <label class="cms-full"><span>Notes</span><input name="redirect_notes" value="{{ current.redirectNotes }}"></label>
+          </div>
+        </section>
+
+        <section id="advanced" class="cms-editor-panel">
+          <h2>Advanced</h2>
+          <h3>Schema override</h3>
+          <textarea class="cms-code" name="schema_json" rows="10">{{ current.schemaJson }}</textarea>
+          <p class="cms-note">FAQPage schema is generated automatically from visible FAQ rows. This JSON field is for explicit page-specific overrides.</p>
+          <p class="cms-note">Content is stored in <code>data/admin/pages.json</code> by page key and language. No language mixing is used on public pages.</p>
+        </section>
+          </div>
+
+          <aside class="cms-editor-side" aria-label="Page summary">
+            <article>
+              <span>Status</span>
+              <strong>{{ current.status|title if current.status else "Published" }}</strong>
+            </article>
+            <article>
+              <span>Language</span>
+              <strong>{{ lang|upper }}</strong>
+              <div class="cms-langPills" aria-label="Edit language version">
+                {% for l in NAV_LANGS %}
+                  <a class="{% if (l.internal if l.internal is defined else l.slug) == lang %}is-active{% endif %}" href="/admin/pages/edit?pageKey={{ page_key }}&lang={{ l.slug }}">{{ l.slug|upper }}</a>
+                {% endfor %}
+              </div>
+            </article>
+            <article>
+              <span>Slug</span>
+              <code>{{ current.slug or "auto-from-h1" }}</code>
+            </article>
+            <article>
+              <span>SEO text</span>
+              <strong>{{ "Enabled" if current.seoTextEnabled else "Disabled" }}</strong>
+            </article>
+            <article>
+              <span>FAQ</span>
+              <strong>{{ current.visibleFaq|length if current.visibleFaq is defined else current.faq|length }} visible</strong>
+            </article>
+            <article>
+              <span>Comments</span>
+              <strong>{{ "Enabled" if current.commentsEnabled else "Disabled" }}</strong>
+            </article>
+            <a class="cms-btn cms-btn-primary" href="#seo-text" data-cms-tab="seo-text">Edit SEO Text</a>
+            <a class="cms-btn cms-btn-soft" href="#faq" data-cms-tab="faq">Edit FAQ</a>
+            <a class="cms-btn cms-btn-soft" href="#comments" data-cms-tab="comments">Comments</a>
+          </aside>
+        </div>
+
+        <div class="cms-editor-actions">
+          <button class="cms-btn cms-btn-primary" type="submit">Save page</button>
+          <a class="cms-btn cms-btn-soft" href="/admin/pages/all">Cancel</a>
+        </div>
+      </form>
+    </main>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='admin_cms_editor.js') }}?v={{ ASSET_VER }}" defer></script>
+{% endblock %}

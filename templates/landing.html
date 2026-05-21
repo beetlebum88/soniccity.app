@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% set page_lang_slug = CURRENT_LANG_PUBLIC if CURRENT_LANG_PUBLIC is defined else lang %}
+  {% set route_prefix = "/" if page_lang_slug == "en" else "/" ~ page_lang_slug ~ "/" %}
+  {% set listen_languages = [
+    {"label":"English","code":"en","url":"/"},
+    {"label":"Français","code":"fr","url":"/fr"},
+    {"label":"Español","code":"es","url":"/es"},
+    {"label":"Italiano","code":"it","url":"/it"},
+    {"label":"Українська","code":"uk","url":"/ua"},
+    {"label":"Deutsch","code":"de","url":"/de"}
+  ] %}
+  {% set country_groups = [
+    {"name":T["home_country_group_west"],"slugs":["france","belgium","netherlands","luxembourg","monaco"]},
+    {"name":T["home_country_group_south"],"slugs":["spain","italy","portugal","greece","malta"]},
+    {"name":T["home_country_group_central"],"slugs":["germany","austria","switzerland","czechia","poland"]},
+    {"name":T["home_country_group_north"],"slugs":["denmark","sweden","norway","finland","iceland"]},
+    {"name":T["home_country_group_east"],"slugs":["ukraine","croatia","serbia","romania","bulgaria"]}
+  ] %}
+
+  <section class="ux-hero ux-homeHero ux-travelHero">
+    <div class="container">
+      {% if detected_lang and detected_lang != "en" and lang == "en" %}
+        {% set detected_ns = namespace(label=detected_lang|upper) %}
+        {% for l in NAV_LANGS %}
+          {% if l.slug == detected_lang %}
+            {% set detected_ns.label = l.label %}
+          {% endif %}
+        {% endfor %}
+        <div class="ct-langHint mb-3">
+          <span>{{ T["landing_hero_lang_hint"].replace("{lang}", detected_ns.label) }}</span>
+          <a href="/{{ detected_lang }}">{{ T["landing_hero_lang_cta"].replace("{lang}", detected_ns.label) }}</a>
+        </div>
+      {% endif %}
+
+      <div class="ux-heroGrid ux-productHeroGrid">
+        <div class="ux-heroCopy ux-productHeroCopy">
+          <span class="ux-kicker">{{ T["landing_hero_kicker"] }}</span>
+          <h1>{{ T["landing_hero_title"] }}</h1>
+          <p>{{ T["landing_hero_sub"] }}</p>
+          <div class="ux-actions">
+            <a class="btn btn-primary ct-primaryBtn" href="#live">{{ T["cta_start_gps"] }}</a>
+            <a class="btn btn-outline-dark ct-secondaryBtn" href="#popularCities">{{ T["nav_cities"] }}</a>
+          </div>
+          <div class="ux-trustBullets" aria-label="Guide highlights">
+            <span>6 {{ T["footer_languages"]|lower }}</span>
+            <span>{{ T["nav_cities"] }} & {{ T["nav_places"] }}</span>
+            <span>{{ T["footer_driving_mode"] }} / {{ T["footer_walking_mode"] }}</span>
+          </div>
+        </div>
+
+        <article class="ux-travelPreview" aria-label="GPS audio guide product preview">
+          <img src="/media/city/{{ lang }}/spain/valencia?v=20260514-cathedral" alt="{{ T['city_name_valencia'] }} city audio guide preview" loading="eager" decoding="async"/>
+          <div class="ux-previewRoute" aria-hidden="true"></div>
+          <a class="ux-travelPin ux-travelPinUser" href="#live">{{ T["home_you_are_here"] }}</a>
+          <a class="ux-travelPin ux-travelPinCity" href="{{ route_prefix }}spain/valencia">{{ T["city_name_valencia"] }}</a>
+          <div class="ux-travelNowPlaying" data-ag-now-card>
+            <small data-ag-now-label>{{ T["account_continue_listening"] }}</small>
+            <strong data-ag-now-title>{{ T["player_choose_story"] }}</strong>
+            <div class="ux-playerLine"><i data-ag-now-fill style="width:0%"></i></div>
+          </div>
+          <div class="ux-travelPlayer">
+            <button class="ux-playDot" type="button" aria-label="Preview play" data-ag-continue-toggle></button>
+            <div>
+              <strong>{{ T["badge_audio"] }}</strong>
+              <span>{{ T["home_audio_ready_short"] }}</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="ux-section ux-trustStrip" aria-label="Product benefits">
+    <div class="container">
+      <div class="ux-cardGrid ux-cardGrid4 ux-travelBenefits">
+        <article class="ux-infoCard">
+          <h3>{{ T["landing_feat_1_title"] }}</h3>
+          <p>{{ T["home_benefit_gps"] }}</p>
+        </article>
+        <article class="ux-infoCard">
+          <h3>{{ T["landing_card_clean_title"] }}</h3>
+          <p>{{ T["home_benefit_audio"] }}</p>
+        </article>
+        <article class="ux-infoCard">
+          <h3>{{ T["footer_languages"] }}</h3>
+          <p>{{ T["home_benefit_languages"] }}</p>
+        </article>
+        <article class="ux-infoCard">
+          <h3>{{ T["landing_card_europe_title"] }}</h3>
+          <p>{{ T["home_benefit_europe"] }}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="ux-section ux-mainDemo" id="live">
+    <div class="container">
+      <div class="ux-sectionHead">
+        <span class="ux-kicker">{{ T["badge_audio"] }}</span>
+        <h2>{{ T["landing_features_title"] }}</h2>
+        <p>{{ T["landing_features_sub"] }}</p>
+      </div>
+      <div class="ux-demoShell">
+        <article class="ux-mapCard ux-demoMapCard">
+          <div class="ct-mapTopbar">
+            <span>{{ T["nav_map"] }}</span>
+            <small>{{ T["home_places_around_you"] }}</small>
+          </div>
+          <div id="map" class="ag-map ux-liveMap" aria-label="Live map"></div>
+          <div class="ux-mapControls" aria-label="Map controls">
+            <a href="#live">{{ T["home_my_location"] }}</a>
+            <a href="{{ route_prefix }}spain/valencia#cityPlaces">{{ T["home_show_places"] }}</a>
+          </div>
+          <div class="ux-mapOverlayCard ux-selectedPlacePopup">
+            <b>{{ T["home_central_market"] }}</b>
+            <span>{{ T["home_ready_walk"] }}</span>
+          </div>
+        </article>
+
+        <aside class="ux-guidePanel" id="storyPanel">
+          <div class="ux-guidePanelTop">
+            <span>{{ T["home_now_near"] }}</span>
+            <h3>{{ T["city_name_valencia"] }}</h3>
+            <p>24 {{ T["city_audio_stories"] }} · 38 {{ T["nearby_places"]|lower }}</p>
+            <button id="btnLocate" class="btn btn-primary btn-sm px-3" type="button">{{ T["hero_start_listening"] }}</button>
+            <button id="btnStop" class="btn btn-outline-dark btn-sm px-3 ux-hiddenControl" type="button" disabled>{{ T["cta_stop"] }}</button>
+            <label class="ux-checkLine ux-hiddenControl">
+              <input id="autoMode" type="checkbox"/>
+              <span>{{ T["home_auto_detect"] }}</span>
+            </label>
+            <b id="status" class="ux-liveStatus">{{ T["status_ready"] }}</b>
+            <ul id="citiesList" class="ux-cityList">
+              <li><span>{{ T["home_nearby_placeholder"] }}</span><b>10 km</b></li>
+            </ul>
+          </div>
+
+          <div class="ux-guidePlaylist">
+            <div class="ux-topicDeckHead">
+              <div>
+                <span class="ux-kicker">{{ T["city_audio_stories"] }}</span>
+              <h3 id="storyTitle">{{ T["city_playlist_title_tpl"].replace("{city}", T["city_name_valencia"]) }}</h3>
+              </div>
+              <div class="ux-topicDeckMeta">
+                <b>{{ T["home_topics_count"] }}</b>
+                <span>{{ T["home_first_story_ready"] }}</span>
+              </div>
+            </div>
+            <nav class="ux-topicConstellation" aria-label="{{ T['city_name_valencia'] }} audio topic preview">
+              <a class="ux-topicCenter" href="{{ route_prefix }}spain/valencia">{{ T["city_name_valencia"] }}</a>
+              <a class="ux-topicNode ux-topicReady ux-topicHistory" href="{{ route_prefix }}spain/valencia#storyPanel"><span>01</span>{{ T["topic_history"] }}</a>
+              <a class="ux-topicNode ux-topicReady ux-topicOldTown" href="{{ route_prefix }}spain/valencia#storyPanel"><span>02</span>{{ T["topic_old_town"] }}</a>
+              <a class="ux-topicNode ux-topicNext ux-topicLandmarks" href="{{ route_prefix }}spain/valencia#storyPanel"><span>03</span>{{ T["topic_landmarks"] }}</a>
+              <a class="ux-topicNode ux-topicReady ux-topicCulture" href="{{ route_prefix }}spain/valencia#storyPanel"><span>04</span>{{ T["topic_culture"] }}</a>
+              <a class="ux-topicNode ux-topicPreparing ux-topicFood" href="{{ route_prefix }}spain/valencia#storyPanel"><span>05</span>{{ T["topic_food"] }}</a>
+              <a class="ux-topicNode ux-topicReady ux-topicArchitecture" href="{{ route_prefix }}spain/valencia#storyPanel"><span>06</span>{{ T["topic_architecture"] }}</a>
+              <a class="ux-topicNode ux-topicMuseums" href="{{ route_prefix }}spain/valencia#storyPanel"><span>07</span>{{ T["topic_museums"] }}</a>
+              <a class="ux-topicMore" href="{{ route_prefix }}spain/valencia#storyPanel">{{ T["topic_more"] }}</a>
+            </nav>
+            <div class="ux-liveGuideControls">
+              <div class="ux-metaLine">
+                {{ T["nav_language"] }}: <b id="activeLang">{{ CURRENT_LANG|upper }}</b>
+                <span id="langHintWrap" hidden>(<span id="langHint"></span>)</span>
+              </div>
+              <div class="ag-voiceToggle" role="group" aria-label="{{ T['voice_label'] }}">
+                <button id="voiceFemale" class="ag-voiceBtn" type="button" data-voice="female" aria-pressed="true">{{ T["voice_female"] }}</button>
+                <button id="voiceMale" class="ag-voiceBtn" type="button" data-voice="male" aria-pressed="false">{{ T["voice_male"] }}</button>
+              </div>
+              <div id="storySource" class="ux-metaLine"></div>
+              <div id="storySections" class="ag-outline ux-playlist"></div>
+            </div>
+          </div>
+
+          <div class="ux-demoPlayer" data-ag-now-card>
+            <button class="ux-playDot" type="button" aria-label="Continue listening" data-ag-continue-toggle></button>
+            <div>
+            <strong data-ag-now-title>{{ T["player_choose_story"] }}</strong>
+            <span data-ag-now-label>{{ T["account_continue_listening"] }}</span>
+            </div>
+            <div class="ux-playerLine"><i data-ag-now-fill style="width:0%"></i></div>
+          </div>
+          <a class="ux-fullGuideLink" href="{{ route_prefix }}spain/valencia">{{ T["home_open_valencia_guide"] }}</a>
+          <div class="ux-playerActions ux-hiddenControl">
+            <button id="btnSpeak" class="btn btn-primary btn-sm px-3" type="button" disabled>{{ T["listen_all"] }}</button>
+            <button id="btnStopSpeech" class="btn btn-outline-dark btn-sm px-3" type="button" disabled>{{ T["stop"] }}</button>
+            <button id="btnPause" class="btn btn-outline-dark btn-sm px-3" type="button" disabled>{{ T["pause"] }}</button>
+            <button id="btnResume" class="btn btn-outline-dark btn-sm px-3" type="button" disabled>{{ T["resume"] }}</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="ux-section ux-howSection" id="how">
+    <div class="container">
+      <div class="ux-sectionHead">
+        <span class="ux-kicker">{{ T["nav_how"] }}</span>
+        <h2>{{ T["landing_section_1_title"] }}</h2>
+      </div>
+      <div class="ux-stepFlow">
+        <article>
+          <i class="ux-stepIcon" aria-hidden="true">
+            <img src="{{ url_for('static', filename='img/how-it-works/01-enable-gps-exact-transparent.png') }}" alt="" loading="lazy" decoding="async">
+          </i>
+          <h3>{{ T["cta_start_gps"] }}</h3>
+          <p>{{ T["landing_feat_1_sub"] }}</p>
+        </article>
+        <article>
+          <i class="ux-stepIcon" aria-hidden="true">
+            <img src="{{ url_for('static', filename='img/how-it-works/02-find-nearby-city-exact-transparent.png') }}" alt="" loading="lazy" decoding="async">
+          </i>
+          <h3>{{ T["nearby_title"] }}</h3>
+          <p>{{ T["nearby_found"].replace("{n}", "10") if T.nearby_found is defined else T["landing_step_2"] }}</p>
+        </article>
+        <article>
+          <i class="ux-stepIcon" aria-hidden="true">
+            <img src="{{ url_for('static', filename='img/how-it-works/03-choose-story-exact-transparent.png') }}" alt="" loading="lazy" decoding="async">
+          </i>
+          <h3>{{ T["player_choose_story"] }}</h3>
+          <p>{{ T["home_pick_story_sub"] }}</p>
+        </article>
+        <article>
+          <i class="ux-stepIcon" aria-hidden="true">
+            <img src="{{ url_for('static', filename='img/how-it-works/04-start-listening-exact-transparent.png') }}" alt="" loading="lazy" decoding="async">
+          </i>
+          <h3>{{ T["hero_start_listening"] }}</h3>
+          <p>{{ T["home_player_stays_sub"] }}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="ux-section ux-useCases" id="drivingMode">
+    <div class="container">
+      <div class="ux-sectionHead ux-sectionHeadRow">
+        <div>
+          <span class="ux-kicker">{{ T["home_use_cases"] }}</span>
+          <h2>{{ T["home_use_cases_title"] }}</h2>
+        </div>
+      </div>
+      <div class="ux-useCaseGrid">
+        <article class="ux-useCaseCard ux-driveCard">
+          <div class="ux-useCasePreview">
+            <img src="/media/city/{{ lang }}/spain/valencia?v=20260514-cathedral" alt="Road trip audio guide preview" loading="lazy" decoding="async"/>
+            <div class="ux-previewRoute" aria-hidden="true"></div>
+            <a class="ux-travelPin ux-travelPinUser" href="#live">{{ T["home_car_label"] }}</a>
+            <a class="ux-travelPin ux-travelPinCity" href="{{ route_prefix }}spain/valencia">{{ T["city_name_valencia"] }}</a>
+            <div class="ux-useCasePlayer">
+              <button class="ux-playDot" type="button" aria-label="Driving mode play" data-ag-continue-toggle></button>
+              <span>{{ T["home_first_story_ready"] }}</span>
+            </div>
+          </div>
+          <div class="ux-useCaseBody">
+            <h3>{{ T["home_for_driving"] }}</h3>
+            <ul>
+              <li>{{ T["home_detects_nearby"] }}</li>
+              <li>{{ T["home_updates_move"] }}</li>
+              <li>{{ T["home_keeps_playing"] }}</li>
+            </ul>
+            <a class="btn btn-primary ct-primaryBtn" href="#live">{{ T["home_try_driving"] }}</a>
+          </div>
+        </article>
+
+        <article class="ux-useCaseCard ux-walkCard" id="walkingMode">
+          <div class="ux-useCasePreview ux-walkPreview">
+            <img src="/media/place/{{ lang }}/spain/valencia/valencia-cathedral" alt="Walking mode landmark guide preview" loading="lazy" decoding="async"/>
+            <div class="ux-walkPlaceCard">
+              <strong>{{ T["place_name_valencia_cathedral"] }}</strong>
+              <small>{{ T["home_ready_walk_localized"] }}</small>
+            </div>
+          </div>
+          <div class="ux-useCaseBody">
+            <h3>{{ T["home_for_walking"] }}</h3>
+            <ul>
+              <li>{{ T["home_shows_landmarks"] }}</li>
+              <li>{{ T["home_listen_places"] }}</li>
+              <li>{{ T["home_use_filters"] }}</li>
+            </ul>
+            <a class="btn btn-primary ct-primaryBtn" href="#popularPlaces">{{ T["home_explore_walking"] }}</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="ux-section ux-languageSection" id="languages">
+    <div class="container">
+      <div class="ux-sectionHead">
+        <span class="ux-kicker">{{ T["footer_languages"] }}</span>
+        <h2>{{ T["home_languages_title"] }}</h2>
+        <p>{{ T["home_languages_sub"] }}</p>
+      </div>
+      <div class="ux-languageGrid ux-languageStrip">
+        {% for item in listen_languages %}
+          <a class="ux-languageCard" href="{{ item.url }}">
+            <b>{{ item.label }}</b>
+            <span>{{ item.code|upper }}</span>
+            <small>{{ T["home_audio_supported"] }}</small>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="ux-section" id="popularCities">
+    <div class="container">
+      <div class="ux-sectionHead ux-sectionHeadRow">
+        <div>
+          <span class="ux-kicker">{{ T["home_popular_cities"] }}</span>
+          <h2>{{ T["home_city_guides_title"] }}</h2>
+        </div>
+        <a href="#exploreGuides">{{ T["home_view_all_cities"] }}</a>
+      </div>
+      <div class="ux-cardGrid ux-cityGrid ux-featuredGrid">
+        {% for c in popular_cities %}
+          <article class="ux-guideCard ux-cityGuideCard">
+            <a class="ux-cardImageLink" href="{{ route_prefix }}{{ c.countrySlug }}/{{ c.citySlug }}" aria-label="{{ T['common_open'] }} {{ c.name }}">
+              <div class="ux-cardImageWrap">
+              <img src="/media/city/{{ lang }}/{{ c.countrySlug }}/{{ c.citySlug }}" alt="{{ c.name }}" loading="lazy" decoding="async" onerror="this.remove()"/>
+              <div class="ux-cardFallback"><span>{{ c.name }}</span></div>
+              </div>
+            </a>
+            <div class="ux-guideCardBody">
+              <a class="ux-badge ux-badgeLink" href="{{ route_prefix }}{{ c.countrySlug }}" aria-label="{{ T['common_open'] }} {{ c.country }}">{{ c.country }}</a>
+              <h3><a class="ux-cardTitleLink" href="{{ route_prefix }}{{ c.countrySlug }}/{{ c.citySlug }}">{{ c.name }}</a></h3>
+              <p>{{ c.desc }}</p>
+              <div class="ux-cardMeta">
+                <span>{{ c.audioCount }} {{ T["city_audio_stories"] }}</span>
+                <span>{{ c.placesCount }} {{ T["nav_places"]|lower }}</span>
+              </div>
+              <span class="ux-cardCta">{{ T["common_open"] }}</span>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="ux-section" id="popularPlaces">
+    <div class="container">
+      <div class="ux-sectionHead ux-sectionHeadRow">
+        <div>
+          <span class="ux-kicker">{{ T["home_iconic_places"] }}</span>
+          <h2>{{ T["home_landmarks_title"] }}</h2>
+        </div>
+        <a href="#exploreGuides">{{ T["home_view_all_places"] }}</a>
+      </div>
+      <div class="ux-cardGrid ux-placeGrid ux-featuredGrid">
+        {% for p in iconic_places %}
+          <article class="ux-guideCard ux-placeGuideCard">
+            <a class="ux-cardImageLink" href="{{ route_prefix }}{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}" aria-label="{{ T['common_open'] }} {{ p.name }}">
+              <div class="ux-cardImageWrap">
+                <img src="/media/place/{{ lang }}/{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}" alt="{{ p.name }}" loading="lazy" decoding="async" onerror="this.remove()"/>
+                <div class="ux-cardFallback"><span>{{ p.name }}</span></div>
+              </div>
+            </a>
+            <div class="ux-guideCardBody">
+              <span class="ux-badge">{{ p.category }}</span>
+              <h3><a class="ux-cardTitleLink" href="{{ route_prefix }}{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}">{{ p.name }}</a></h3>
+              <p>{{ p.desc }}</p>
+              <div class="ux-cardMeta">
+                <span>{{ p.city }}, {{ p.country }}</span>
+                <span>{{ T["home_ready_to_listen"] }}</span>
+              </div>
+              <span class="ux-cardCta">{{ T["common_listen"] }}</span>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="ux-section ux-exploreSection" id="exploreGuides">
+    <div class="container">
+      <article class="ux-travelSearch">
+        <div>
+          <span class="ux-kicker">{{ T["footer_explore"] }}</span>
+          <h2>{{ T["search_guides"] }}</h2>
+          <p>{{ T["home_search_sub"] }}</p>
+        </div>
+        <label class="ux-searchBox ux-searchBoxLarge">
+          <span>{{ T["home_search_city_landmark"] }}</span>
+          <input type="search" placeholder="{{ T["home_search_city_landmark"] }}" aria-label="{{ T["home_search_city_landmark"] }}">
+        </label>
+        <div class="ux-filterChips">
+          <button type="button">{{ T["home_near_me"] }}</button>
+          <button type="button">{{ T["nav_cities"] }}</button>
+          <button type="button">{{ T["home_landmarks"] }}</button>
+          <button type="button">{{ T["filter_museums"] }}</button>
+          <button type="button">{{ T["home_audio_ready_short"] }}</button>
+        </div>
+        <div class="ux-popularSearches" aria-label="{{ T['home_popular_searches'] }}">
+          <span>{{ T["home_popular_searches"] }}</span>
+          <a href="{{ route_prefix }}spain/valencia">{{ T["city_name_valencia"] }}</a>
+          <a href="{{ route_prefix }}italy/rome">{{ T["city_name_rome"] }}</a>
+          <a href="{{ route_prefix }}france/paris">{{ T["city_name_paris"] }}</a>
+          <a href="{{ route_prefix }}spain/barcelona">{{ T["city_name_barcelona"] }}</a>
+        </div>
+        <a class="btn btn-primary ct-primaryBtn ux-panelCta" href="#popularCities">{{ T["home_open_explore"] }}</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="ux-section ux-europeSection" id="countryPreview">
+    <div class="container">
+      <div class="ux-europeShell ux-europeAtlas">
+        <article class="ux-europeIntro">
+          <span class="ux-kicker">{{ T["nav_europe"] }}</span>
+          <h2>{{ T["landing_card_europe_title"] }}</h2>
+          <p>{{ T["home_europe_intro"] }}</p>
+          <div class="ux-europeStats" aria-label="Europe guide highlights">
+            <span><b>{{ NAV_EUROPE_COUNTRIES|length }}</b> {{ T["footer_countries"]|lower }}</span>
+            <span><b>6</b> {{ T["footer_languages"]|lower }}</span>
+            <span><b>Free</b> {{ T["listen_all"]|lower }}</span>
+          </div>
+          <a class="btn btn-outline-dark ct-secondaryBtn" href="#finalCta">{{ T["home_choose_country"] }}</a>
+        </article>
+        <div class="ux-europeBoard">
+          <div class="ux-europeRoute" aria-label="Recommended audio guide routes">
+            <a href="{{ route_prefix }}spain/valencia"><span>01</span><b>{{ T["country_name_spain"] if T.country_name_spain is defined else "Spain" }}</b><small>{{ T["home_route_spain_cities"] }}</small></a>
+            <a href="{{ route_prefix }}italy/rome"><span>02</span><b>{{ T["country_name_italy"] if T.country_name_italy is defined else "Italy" }}</b><small>{{ T["home_route_italy_cities"] }}</small></a>
+            <a href="{{ route_prefix }}france/paris"><span>03</span><b>{{ T["country_name_france"] if T.country_name_france is defined else "France" }}</b><small>{{ T["home_route_france_cities"] }}</small></a>
+          </div>
+          <div class="ux-countryGroups ux-countryGroupsCompact">
+            {% for group in country_groups %}
+              <article class="ux-countryGroup">
+                <h3>{{ group.name }}</h3>
+                <div class="ux-countryPills">
+                  {% for c in NAV_EUROPE_COUNTRIES %}
+                    {% if c.slug in group.slugs %}
+                      <a class="ct-countryPill" href="{{ '/' ~ c.slug if page_lang_slug == 'en' else '/' ~ page_lang_slug ~ '/' ~ c.slug }}">
+                        <img class="Flag" src="{{ c.flagUrl }}" alt="{{ c.name }} flag" loading="lazy"/>
+                        <span>{{ c.name }}</span>
+                      </a>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ux-section ux-whySection">
+    <div class="container">
+      <div class="ux-whyGrid">
+        <article class="ux-textBlock ux-whyCopy">
+        <span class="ux-kicker">{{ T["landing_cards_title"] }}</span>
+          <h2>{{ T["landing_features_title"] }}</h2>
+          <p>{{ T["home_why_text"] }}</p>
+        </article>
+        <div class="ux-benefitGrid">
+          <article class="ux-infoCard"><h3>{{ T["home_no_read"] }}</h3></article>
+          <article class="ux-infoCard"><h3>{{ T["home_location_stories"] }}</h3></article>
+          <article class="ux-infoCard"><h3>{{ T["home_road_walks"] }}</h3></article>
+          <article class="ux-infoCard"><h3>{{ T["home_one_app"] }}</h3></article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ux-section ux-seoBlock" id="smartGuideText">
+    <div class="container">
+      <article class="ux-textBlock ux-seoTextBlock">
+        <span class="ux-kicker">{{ T["home_seo_kicker"] }}</span>
+        <h2>{{ T["home_seo_title"] }}</h2>
+        <p>{{ T["home_seo_p1"] }}</p>
+        <p>{{ T["home_seo_p2"] }}</p>
+        <p>{{ T["home_seo_p3"] }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="ux-section ux-finalCta" id="finalCta">
+    <div class="container">
+      <article class="ux-finalCtaCard">
+        <div>
+          <span class="ux-kicker">{{ T["hero_start_listening"] }}</span>
+          <h2>{{ T["home_final_title"] }}</h2>
+          <p>{{ T["home_final_sub"] }}</p>
+        </div>
+        <div class="ux-actions">
+          <a class="btn btn-primary ct-primaryBtn" href="#live">{{ T["home_start_gps"] }}</a>
+          <a class="btn btn-outline-dark ct-secondaryBtn" href="#popularCities">{{ T["home_explore_cities"] }}</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  {% include "_admin_public_content.html" %}
+  {% include "_auto_faq.html" %}
+  {% if comments_context is not defined and PUBLIC_COMMENTS_CONTEXT is defined %}
+    {% set comments_context = PUBLIC_COMMENTS_CONTEXT("landing_page", "home", "SonicCity", URL_LANDING(lang), lang, admin_content) %}
+  {% endif %}
+  {% include "_comments.html" %}
+
+  <div class="ag-mobileDock d-lg-none">
+    <a class="ag-mobileDockBtn" href="#live">{{ T["nav_map"] }}</a>
+    <button class="ag-mobileDockBtn ag-mobileDockBtnPrimary" id="dockGps" type="button">{{ T["cta_start_gps"] }}</button>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    window.AUTO_START_GPS = true;
+  </script>
+  <script src="{{ url_for('static', filename='app.js') }}?v={{ ASSET_VER }}"></script>
+{% endblock %}
