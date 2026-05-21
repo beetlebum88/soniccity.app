@@ -10659,6 +10659,14 @@ def llms_txt():
     return send_file(fp, mimetype="text/plain", conditional=True, max_age=3600)
 
 
+@app.get("/google2fc9b2aed216f535.html")
+def google_site_verification():
+    fp = ROOT / "google2fc9b2aed216f535.html"
+    if not fp.exists():
+        abort(404)
+    return send_file(fp, mimetype="text/html; charset=utf-8", conditional=True, max_age=3600)
+
+
 @app.get("/favicon.ico")
 def favicon_ico():
     return send_from_directory(ROOT / "static" / "img", "soniccity-favicon.png", mimetype="image/png")
