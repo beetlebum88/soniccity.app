@@ -81,3 +81,13 @@ git pull
 .venv/bin/pip install -r requirements.txt
 sudo systemctl restart soniccity
 ```
+
+## Audio Storage Sync
+
+Audio files are intentionally not committed to Git. Copy them from the local machine to the VPS with `rsync`.
+
+```bash
+./deploy/rsync_audio.sh user@server-ip /var/www/soniccity.app 22
+```
+
+The script syncs local `static/audio/` to `/var/www/soniccity.app/static/audio/` on the server and uses `--delete`, so removed local files are also removed remotely.
