@@ -86,12 +86,20 @@
     return nl === "en" ? `/${parts.join("/")}` : `/${[nl, ...parts].join("/")}`;
   }
 
+  function rememberLanguageChoice(publicLang) {
+    const raw = String(publicLang || "").toLowerCase();
+    if (!raw) return;
+    const internal = raw === "uk" ? "ua" : raw;
+    document.cookie = `lang=${encodeURIComponent(internal)}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  }
+
   if (langMenu) {
     langMenu.addEventListener("click", (e) => {
       const a = e.target.closest("a[data-lang]");
       if (!a) return;
       e.preventDefault();
 
+      rememberLanguageChoice(a.dataset.lang);
       const target = replaceLangInPath(window.location.pathname, a.dataset.lang);
       if (target) window.location.href = target + window.location.search;
       else window.location.href = a.href;

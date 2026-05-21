@@ -8269,6 +8269,8 @@ def write_access_event(response: Response) -> Response:
 def should_auto_redirect_from_root(detected_lang: str) -> bool:
     if detected_lang == "en":
         return False
+    if lang_param_or_none(request.cookies.get("lang")) == "en":
+        return False
     if is_bot_request():
         return False
     if (request.args.get("no_redirect") or "").strip().lower() in {"1", "true", "yes"}:
@@ -8282,14 +8284,18 @@ def should_auto_redirect_from_root(detected_lang: str) -> bool:
 @app.before_request
 def redirect_en_prefixed_paths() -> Optional[Response]:
     path = (request.path or "/").split("?", 1)[0]
-    if path == "/en" or path.startswith("/en/"):
+    if path == "/en":
+        return None
+    if path.startswith("/en/"):
         target = path[3:] or "/"
         if not target.startswith("/"):
             target = f"/{target}"
         qs = (request.query_string or b"").decode("utf-8", errors="ignore")
         if qs:
             target = f"{target}?{qs}"
-        return redirect(target, code=301)
+        resp = make_response(redirect(target, code=301))
+        resp.set_cookie("lang", DEFAULT_LANG, max_age=60 * 60 * 24 * 365)
+        return resp
     return None
 
 
@@ -10229,8 +10235,6 @@ def index():
 @app.get("/<re('en|fr|es|it|ua|uk|de'):lang>")
 def landing_lang(lang: str):
     lang = normalize_lang(lang)
-    if lang == "en":
-        return redirect("/", code=301)
     featured_places = localized_featured_places(landing_featured_places(24), lang)
     auto_faq = auto_faq_for_page(
         "home",
