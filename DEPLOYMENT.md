@@ -25,7 +25,7 @@ Important values:
 - `ADMIN_EMAIL=<owner-email>`
 - `ADMIN_PASSWORD_HASH=<werkzeug-password-hash>`
 - `CONTACT_EMAIL=info@soniccity.app`
-- SMTP values for email delivery
+- email delivery: either SMTP values (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM`) or a provider key (`EMAIL_PROVIDER=resend` + `RESEND_API_KEY`, `EMAIL_PROVIDER=sendgrid` + `SENDGRID_API_KEY`, or `EMAIL_PROVIDER=postmark` + `POSTMARK_SERVER_TOKEN`)
 - `OPENAI_API_KEY=<server-side-key>`
 - `AUDIO_STORAGE_PATH=static/audio`
 - `GLOBAL_NOINDEX=1` while testing on VPS

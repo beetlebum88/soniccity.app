@@ -151,6 +151,10 @@ SMTP_FROM = str(os.getenv("EMAIL_FROM") or os.getenv("SMTP_FROM") or CONTACT_EMA
 SMTP_USE_TLS = str(os.getenv("SMTP_USE_TLS") or "1").strip().lower() not in {"0", "false", "no", "off"}
 APP_URL = str(os.getenv("APP_URL") or SITE_URL).strip().rstrip("/")
 REQUIRE_SMTP_FOR_EMAIL = env_bool("REQUIRE_SMTP_FOR_EMAIL", IS_PRODUCTION)
+EMAIL_PROVIDER = str(os.getenv("EMAIL_PROVIDER") or "").strip().lower()
+RESEND_API_KEY = str(os.getenv("RESEND_API_KEY") or "").strip()
+SENDGRID_API_KEY = str(os.getenv("SENDGRID_API_KEY") or "").strip()
+POSTMARK_SERVER_TOKEN = str(os.getenv("POSTMARK_SERVER_TOKEN") or "").strip()
 ADMIN_BASIC_AUTH_ENABLED = env_bool("ADMIN_BASIC_AUTH_ENABLED", False)
 CSRF_PROTECTION_ENABLED = env_bool("CSRF_PROTECTION_ENABLED", True)
 MAX_AUDIO_UPLOAD_BYTES = int(os.getenv("MAX_AUDIO_UPLOAD_BYTES") or str(50 * 1024 * 1024))
@@ -5730,6 +5734,125 @@ def _sendmail_path() -> str:
     return str(fallback) if fallback.exists() else ""
 
 
+def _email_message_body(message: EmailMessage) -> str:
+    try:
+        body = message.get_body(preferencelist=("plain",))
+        if body:
+            return body.get_content()
+    except Exception:
+        pass
+    try:
+        return message.get_content()
+    except Exception:
+        return ""
+
+
+def _email_message_html(message: EmailMessage) -> str:
+    try:
+        body = message.get_body(preferencelist=("html",))
+        if body:
+            return body.get_content()
+    except Exception:
+        pass
+    return ""
+
+
+def _post_email_provider_json(url: str, headers: Dict[str, str], payload: Dict[str, Any], timeout_s: int = 15) -> Tuple[bool, str]:
+    try:
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=body,
+            headers={"Content-Type": "application/json", **headers},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=timeout_s) as response:
+            if 200 <= int(response.status) < 300:
+                return True, "sent_provider"
+            return False, f"provider_failed: http_{response.status}"
+    except urllib.error.HTTPError as exc:
+        try:
+            error_body = exc.read().decode("utf-8", "replace")
+        except Exception:
+            error_body = str(exc)
+        return False, f"provider_failed: {clean_plain_text(error_body, 220)}"
+    except Exception as exc:
+        return False, f"provider_failed: {clean_plain_text(str(exc), 220)}"
+
+
+def send_email_via_provider(message: EmailMessage) -> Tuple[bool, str]:
+    subject = clean_plain_text(message.get("Subject") or "", 160)
+    to_email = clean_plain_text(message.get("To") or "", 180)
+    from_email = clean_plain_text(message.get("From") or SMTP_FROM or CONTACT_EMAIL, 180)
+    reply_to = clean_plain_text(message.get("Reply-To") or "", 180)
+    text_body = _email_message_body(message)
+    html_body = _email_message_html(message)
+    provider = EMAIL_PROVIDER
+    if not provider:
+        if RESEND_API_KEY:
+            provider = "resend"
+        elif SENDGRID_API_KEY:
+            provider = "sendgrid"
+        elif POSTMARK_SERVER_TOKEN:
+            provider = "postmark"
+    if provider == "resend" and RESEND_API_KEY:
+        payload: Dict[str, Any] = {
+            "from": from_email,
+            "to": [to_email],
+            "subject": subject,
+            "text": text_body,
+        }
+        if html_body:
+            payload["html"] = html_body
+        if reply_to and is_valid_email(reply_to):
+            payload["reply_to"] = [reply_to]
+        ok, status = _post_email_provider_json(
+            "https://api.resend.com/emails",
+            {"Authorization": f"Bearer {RESEND_API_KEY}"},
+            payload,
+        )
+        return ok, "sent_resend" if ok else status
+    if provider == "sendgrid" and SENDGRID_API_KEY:
+        content = [{"type": "text/plain", "value": text_body or ""}]
+        if html_body:
+            content.append({"type": "text/html", "value": html_body})
+        payload = {
+            "personalizations": [{"to": [{"email": to_email}]}],
+            "from": {"email": from_email},
+            "subject": subject,
+            "content": content,
+        }
+        if reply_to and is_valid_email(reply_to):
+            payload["reply_to"] = {"email": reply_to}
+        ok, status = _post_email_provider_json(
+            "https://api.sendgrid.com/v3/mail/send",
+            {"Authorization": f"Bearer {SENDGRID_API_KEY}"},
+            payload,
+        )
+        return ok, "sent_sendgrid" if ok else status
+    if provider == "postmark" and POSTMARK_SERVER_TOKEN:
+        payload = {
+            "From": from_email,
+            "To": to_email,
+            "Subject": subject,
+            "TextBody": text_body or "",
+        }
+        if html_body:
+            payload["HtmlBody"] = html_body
+        if reply_to and is_valid_email(reply_to):
+            payload["ReplyTo"] = reply_to
+        ok, status = _post_email_provider_json(
+            "https://api.postmarkapp.com/email",
+            {
+                "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+                "Accept": "application/json",
+            },
+            payload,
+        )
+        return ok, "sent_postmark" if ok else status
+    return False, "not_configured"
+
+
 def send_email_message(message: EmailMessage, *, subject: str, log_body: str, to_email: str) -> Tuple[bool, str]:
     """Send an email via configured SMTP or local sendmail, with JSONL logging."""
     sent = False
@@ -5746,6 +5869,13 @@ def send_email_message(message: EmailMessage, *, subject: str, log_body: str, to
         except Exception as exc:
             status = f"smtp_failed: {clean_plain_text(str(exc), 220)}"
             append_mail_notification_log(f"MAIL SEND FAILED: {subject}", f"{mail_log_body(log_body)}\n\nError: {exc}", to_email)
+
+    provider_sent, provider_status = send_email_via_provider(message)
+    if provider_sent:
+        return True, provider_status
+    if provider_status != "not_configured":
+        status = provider_status
+        append_mail_notification_log(f"MAIL SEND FAILED: {subject}", f"{mail_log_body(log_body)}\n\nError: {provider_status}", to_email)
 
     sendmail = _sendmail_path()
     if sendmail:
@@ -10193,12 +10323,12 @@ def api_subscribe():
     row = update_subscription_notification_status(row.get("id") or "", sent=sent, status=delivery_status) or row
     if not sent:
         return jsonify({
-            "ok": False,
+            "ok": True,
             "saved": True,
             "sent": False,
-            "error": "Subscription saved, but email delivery is not configured.",
+            "warning": "Subscription saved, but email delivery is not configured.",
             "deliveryStatus": delivery_status,
-        }), 503
+        }), 200
     return jsonify({"ok": True, "saved": True, "sent": bool(sent), "deliveryStatus": delivery_status})
 
 
