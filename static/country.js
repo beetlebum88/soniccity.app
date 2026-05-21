@@ -33,7 +33,7 @@
     const citySlug = String(c.citySlug || "");
     const countrySlug = String(c.countrySlug || "");
     const langPrefix = lang && String(lang).toLowerCase() !== "en" ? `/${encodeURIComponent(lang)}` : "";
-    const cityUrl = (countrySlug && citySlug) ? `${langPrefix}/${encodeURIComponent(countrySlug)}/${encodeURIComponent(citySlug)}` : "";
+    const cityUrl = c.url || ((countrySlug && citySlug) ? `${langPrefix}/${encodeURIComponent(countrySlug)}/${encodeURIComponent(citySlug)}` : "");
     const popText = Number(c.population || 0) > 0 ? Number(c.population || 0).toLocaleString() : "—";
     const placesText = Number(c.placesCount || 0);
     const infoHtml = `

@@ -9181,6 +9181,29 @@ def public_place_card_for_lang(
     return row
 
 
+def public_city_card_for_lang(
+    city: Dict[str, Any],
+    *,
+    lang: str,
+    country_slug: str,
+    country_name: str = "",
+) -> Optional[Dict[str, Any]]:
+    city_slug = str(city.get("citySlug") or slugify(city.get("name") or "")).strip().lower()
+    if not city_slug:
+        return None
+    has_translation = city_translation_exists(country_slug, city_slug, lang)
+    url_lang = lang if has_translation else DEFAULT_LANG
+    row = dict(city)
+    row["citySlug"] = city_slug
+    row["countrySlug"] = country_slug
+    row["countryName"] = country_name
+    row["displayName"] = city_display_name_cached_for_lang(row, lang)
+    row["name"] = row["displayName"]
+    row["hasTranslation"] = has_translation
+    row["url"] = city_url(url_lang, country_slug, city_slug)
+    return row
+
+
 def entity_page_is_published_for_lang(
     kind: str,
     lang: str,
@@ -14667,48 +14690,52 @@ def country_page(lang: str, country_slug: str):
     country_view["displayName"] = country_display_name_cached_for_lang(country_view, lang)
     country_view["name"] = country_view["displayName"]
 
-    cities_raw = [
-        c
-        for c in target_country_cities(country_slug)
-        if city_translation_exists(country_slug, str(c.get("citySlug") or ""), lang)
-    ]
+    cities_raw = target_country_cities(country_slug)
     top_city_slugs = {str(c.get("citySlug") or "").strip().lower() for c in cities_raw}
-    top_place_groups = []
-    for group in global_top_place_groups_for_lang(lang, TARGET_CITIES_PER_COUNTRY, COUNTRY_TOP_PLACES_PER_CITY, country_slug):
-        group_city_slug = str(group.get("citySlug") or "").strip().lower()
-        if group_city_slug not in top_city_slugs:
-            continue
-        group_places = [
-            p
-            for p in (group.get("places") or [])
-            if place_translation_exists(
-                country_slug,
-                group_city_slug,
-                str(p.get("slug") or p.get("placeSlug") or ""),
-                lang,
-            )
-        ]
-        if group_places:
-            row = dict(group)
-            row["places"] = group_places
-            top_place_groups.append(row)
-    top_place_groups = top_place_groups[:TARGET_CITIES_PER_COUNTRY]
-    top_places = [p for group in top_place_groups for p in group.get("places", [])]
-    lat, lon = country_center(country_slug)
-
     city_place_count_by_slug: Dict[str, int] = {
         city_slug_key: min(len(dedupe_places(v)), TARGET_PLACES_PER_CITY)
         for (cslug, city_slug_key), v in CITY_PLACES_BY_COUNTRYSLUG_CITYSLUG.items()
         if cslug == country_slug and city_slug_key in top_city_slugs
     }
-    country_place_total = len(top_places)
     cities: List[Dict[str, Any]] = []
     for c in cities_raw:
-        row = dict(c)
-        row["placesCount"] = int(city_place_count_by_slug.get(str(c.get("citySlug") or ""), 0))
-        row["displayName"] = city_display_name_cached_for_lang(row, lang)
-        row["name"] = row["displayName"]
+        row = public_city_card_for_lang(
+            c,
+            lang=lang,
+            country_slug=country_slug,
+            country_name=country_view["displayName"],
+        )
+        if not row:
+            continue
+        row["placesCount"] = int(city_place_count_by_slug.get(str(row.get("citySlug") or ""), 0))
         cities.append(row)
+
+    top_place_groups = []
+    for city_row in cities:
+        group_city_slug = str(city_row.get("citySlug") or "").strip().lower()
+        group_places: List[Dict[str, Any]] = []
+        for p in target_places_for_city(country_slug, group_city_slug, COUNTRY_TOP_PLACES_PER_CITY):
+            place_row = public_place_card_for_lang(
+                p,
+                lang=lang,
+                country_slug=country_slug,
+                city_slug=group_city_slug,
+                country_name=country_view["displayName"],
+                city_name=str(city_row.get("displayName") or city_row.get("name") or ""),
+            )
+            if place_row:
+                group_places.append(place_row)
+        if group_places:
+            top_place_groups.append({
+                "cityName": city_row.get("displayName") or city_row.get("name") or "",
+                "citySlug": group_city_slug,
+                "places": group_places,
+            })
+    top_place_groups = top_place_groups[:TARGET_CITIES_PER_COUNTRY]
+    top_places = [p for group in top_place_groups for p in group.get("places", [])]
+    lat, lon = country_center(country_slug)
+
+    country_place_total = len(top_places)
     top_places_view: List[Dict[str, Any]] = []
     for p in top_places:
         row = dict(p)
@@ -14749,14 +14776,14 @@ def country_page(lang: str, country_slug: str):
         "url": schema_abs_url(page_url),
     }
     city_schema_items = [
-        {"name": c.get("displayName") or c.get("name") or "", "url": city_url(lang, country_slug, str(c.get("citySlug") or ""))}
+        {"name": c.get("displayName") or c.get("name") or "", "url": c.get("url") or city_url(lang, country_slug, str(c.get("citySlug") or ""))}
         for c in cities[:12]
         if c.get("citySlug")
     ]
     place_schema_items = [
         {
             "name": p.get("displayName") or p.get("name") or "",
-            "url": place_url(
+            "url": p.get("url") or place_url(
                 lang,
                 country_slug,
                 str(p.get("citySlug") or ""),

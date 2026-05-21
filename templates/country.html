@@ -141,7 +141,7 @@
             <h3>{{ T["country_popular_cities_tpl"].replace("{country}", country.name) }}</h3>
             <div class="ux-miniList">
               {% for c in cities[:5] %}
-                <a href="{{ route_prefix }}{{ c.countrySlug }}/{{ c.citySlug }}">
+                <a href="{{ c.url if c.url is defined and c.url else route_prefix ~ c.countrySlug ~ '/' ~ c.citySlug }}">
                   <img src="/media/city/en/{{ c.countrySlug }}/{{ c.citySlug }}" alt="{{ c.name }}" loading="lazy" decoding="async"/>
                   <span>{{ c.name }}</span>
                 </a>
@@ -162,15 +162,16 @@
         </div>
         <span class="ux-countPill">{{ country_city_total }} {{ T["stat_cities"] }}</span>
       </div>
-      <div class="ux-cardGrid ux-cityGrid">
-        {% for c in cities[:12] %}
-          <article class="ux-guideCard ux-cityGuideCard">
-            <a class="ux-cardImageLink" href="{{ route_prefix }}{{ c.countrySlug }}/{{ c.citySlug }}" aria-label="Open {{ c.name }} audio guide">
+        <div class="ux-cardGrid ux-cityGrid">
+          {% for c in cities[:12] %}
+            {% set city_href = c.url if c.url is defined and c.url else route_prefix ~ c.countrySlug ~ "/" ~ c.citySlug %}
+            <article class="ux-guideCard ux-cityGuideCard">
+            <a class="ux-cardImageLink" href="{{ city_href }}" aria-label="Open {{ c.name }} audio guide">
               <img src="/media/city/en/{{ c.countrySlug }}/{{ c.citySlug }}" alt="{{ c.name }}" loading="lazy" decoding="async"/>
             </a>
             <div class="ux-guideCardBody">
               <a class="ux-badge ux-badgeLink" href="{{ route_prefix }}{{ country.slug }}" aria-label="Open {{ country.name }} audio guides">{{ country.name }}</a>
-              <h3><a class="ux-cardTitleLink" href="{{ route_prefix }}{{ c.countrySlug }}/{{ c.citySlug }}">{{ c.name }}</a></h3>
+              <h3><a class="ux-cardTitleLink" href="{{ city_href }}">{{ c.name }}</a></h3>
               <p>{{ T["city_progress_note_tpl"].replace("{city}", c.name) }}</p>
               <div class="ux-cardMeta">
                 {% if c.population %}<span>{{ "{:,}".format(c.population) }} {{ T["stat_population"] }}</span>{% endif %}
@@ -195,7 +196,7 @@
         <div class="ux-placeCatalogGrid">
           {% for p in top_places %}
             <article class="ux-placeCatalogCard">
-              <a class="ux-placeCatalogLink" href="{{ route_prefix }}{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}">
+              <a class="ux-placeCatalogLink" href="{{ p.url if p.url is defined and p.url else route_prefix ~ p.countrySlug ~ '/' ~ p.citySlug ~ '/' ~ p.slug }}">
                 <img src="/media/place/en/{{ p.countrySlug }}/{{ p.citySlug }}/{{ p.slug }}" alt="{{ p.name }}" loading="lazy" decoding="async"/>
                 <span>
                   <small>{{ p.categoryLabel if p.categoryLabel is defined else p.category }} · {{ p.cityName }}</small>
