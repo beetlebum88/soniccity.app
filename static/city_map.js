@@ -44,6 +44,7 @@
   }
 
   function placeUrl(place) {
+    if (place && place.url) return String(place.url);
     if (window.AG_PLACE_URL) {
       return window.AG_PLACE_URL({
         lang,
@@ -67,7 +68,6 @@
 
   const places = rawPlaces
     .filter((p) => p && p.slug && p.name)
-    .slice(0, 30)
     .map((p) => {
       const row = placeRows.get(String(p.slug));
       return {

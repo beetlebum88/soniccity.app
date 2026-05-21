@@ -170,15 +170,16 @@
           <a href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}">{{ T["place_open_city_guide"] }}</a>
         </div>
         <div class="ux-cardGrid ux-placeGrid">
-          {% for p in places[:12] %}
+          {% for p in places %}
+            {% set place_href = p.url if p.url is defined and p.url else route_prefix ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
             <article class="ux-guideCard ux-placeGuideCard">
-              <a class="ux-cardImageLink" href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}" aria-label="Open {{ p.name }} audio guide">
+              <a class="ux-cardImageLink" href="{{ place_href }}" aria-label="Open {{ p.name }} audio guide">
                 <img src="/media/place/en/{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}"
                      alt="{{ p.name }}" loading="lazy" decoding="async"/>
               </a>
               <div class="ux-guideCardBody">
                 <span class="ux-badge">{{ T["badge_audio"] }}</span>
-                <h3><a class="ux-cardTitleLink" href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}">{{ p.name }}</a></h3>
+                <h3><a class="ux-cardTitleLink" href="{{ place_href }}">{{ p.name }}</a></h3>
                 <p>{{ T["place_nearby_text_tpl"].replace("{city}", city.name) }}</p>
                 <div class="ux-cardMeta">
                   <span>{{ T["badge_audio"] }}</span>
@@ -259,8 +260,8 @@
           <button type="button" data-map-filter="viewpoint">{{ T["filter_viewpoints"] }}</button>
         </div>
         <ul class="ag-mapPlaceList" id="cityMapPlaceList">
-          {% for p in map_places[:30] %}
-            {% set place_url = route_prefix ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
+          {% for p in map_places %}
+            {% set place_url = p.url if p.url is defined and p.url else route_prefix ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
             {% set place_img = "/media/place/en/" ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
             {% set place_category = p.categoryLabel if p.categoryLabel is defined and p.categoryLabel else (p.category if p.category is defined and p.category else T["category_landmark"]) %}
             <li data-place-row="{{ p.slug }}" data-place-category="{{ place_category|lower }}">
@@ -308,7 +309,7 @@
       lon: {{ city.lon|tojson }},
       wikiTitle: {{ place.name|tojson }}
     };
-    window.CITY_PLACES = {{ ([{"name": place.name, "slug": place.slug, "countrySlug": country.slug, "citySlug": city.citySlug}] + (places if places is defined else []))|tojson }};
+    window.CITY_PLACES = {{ map_places|tojson }};
     window.APP_LANG = {{ page_lang_slug|tojson }};
     window.APP_LANG_INTERNAL = {{ lang|tojson }};
     window.WIKI_LANG = {{ wiki_lang|tojson }};

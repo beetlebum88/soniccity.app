@@ -6723,6 +6723,11 @@ PLACE_METADATA_OVERRIDES: Dict[Tuple[str, str, str], Dict[str, Any]] = {
         "lat": 39.3469,
         "lon": -0.333,
     },
+    ("italy", "rome", "st-peters-basilica"): {
+        "category": "church",
+        "lat": 41.9021569,
+        "lon": 12.4537105,
+    },
 }
 
 
@@ -7007,6 +7012,46 @@ def resolve_place_coordinates(
             if coords:
                 return (coords[0], coords[1], str(s.get("title") or t))
 
+    return None
+
+
+def resolve_place_coordinates_osm(
+    place_name: str,
+    city_name: str,
+    country_name: str,
+) -> Optional[Tuple[float, float, str]]:
+    place_name = str(place_name or "").strip()
+    city_name = str(city_name or "").strip()
+    country_name = str(country_name or "").strip()
+    if not place_name:
+        return None
+    queries = [
+        ", ".join(x for x in (place_name, city_name, country_name) if x),
+        ", ".join(x for x in (place_name, country_name) if x),
+        " ".join(x for x in (place_name, city_name, country_name) if x),
+    ]
+    seen: set[str] = set()
+    for q in queries:
+        q = q.strip()
+        if not q or q.lower() in seen:
+            continue
+        seen.add(q.lower())
+        url = "https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode({
+            "q": q,
+            "format": "jsonv2",
+            "limit": "5",
+            "addressdetails": "1",
+        })
+        rows = http_get_json(url, timeout_s=10)
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            coords = valid_lat_lon(row.get("lat"), row.get("lon"))
+            title = str(row.get("name") or row.get("display_name") or place_name).strip()
+            if coords and resolved_title_matches_place(title, place_name, city_name):
+                return coords[0], coords[1], title
     return None
 
 
@@ -9104,6 +9149,36 @@ def place_translation_exists(country_slug: str, city_slug: str, place_slug: str,
         place_slug=place_slug,
         source_title=str(place.get("name") or ""),
     )
+
+
+def public_place_card_for_lang(
+    place: Dict[str, Any],
+    *,
+    lang: str,
+    country_slug: str,
+    city_slug: str,
+    country_name: str = "",
+    city_name: str = "",
+) -> Optional[Dict[str, Any]]:
+    place_slug = str(place.get("slug") or place.get("placeSlug") or "").strip()
+    if not place_slug:
+        return None
+    has_translation = place_translation_exists(country_slug, city_slug, place_slug, lang)
+    url_lang = lang if has_translation else DEFAULT_LANG
+    row = dict(place)
+    row["slug"] = place_slug
+    row["placeSlug"] = place_slug
+    row["countrySlug"] = country_slug
+    row["citySlug"] = city_slug
+    row["countryName"] = country_name
+    row["cityName"] = city_name
+    row["category"] = row.get("category") or "Landmark"
+    row["categoryLabel"] = localized_category_label(str(row.get("category") or "Landmark"), lang)
+    row["displayName"] = place_display_name_cached_for_lang(row, lang)
+    row["name"] = row["displayName"]
+    row["hasTranslation"] = has_translation
+    row["url"] = place_url(url_lang, country_slug, city_slug, place_slug)
+    return row
 
 
 def entity_page_is_published_for_lang(
@@ -11314,8 +11389,7 @@ def api_place_geo():
             return jsonify(cached_geo)
 
     current_missing = missing_path.exists()
-    if current_missing and (wiki_lang == "en" or en_missing_path.exists()):
-        return jsonify({"error": "No coordinates"}), 404
+    skip_wiki_lookup = current_missing and (wiki_lang == "en" or en_missing_path.exists())
 
     place_name = str(place.get("name") or "").strip()
     city_name = str(place.get("cityName") or "").strip()
@@ -11327,11 +11401,15 @@ def api_place_geo():
         resolved = resolve_place_coordinates(wiki_lang, place_name, city_name, country_name)
 
     attempted_en = False
-    if not resolved and wiki_lang != "en":
+    if not resolved and wiki_lang != "en" and not skip_wiki_lookup:
         used_lang = "en"
         attempted_en = True
         if not en_missing_path.exists():
             resolved = resolve_place_coordinates("en", place_name, city_name, country_name)
+
+    if not resolved:
+        used_lang = wiki_lang
+        resolved = resolve_place_coordinates_osm(place_name, city_name, country_name)
 
     if not resolved:
         try:
@@ -14778,32 +14856,22 @@ def city_page(lang: str, country_slug: str, city_slug: str):
     resolved_city_slug = str(city.get("citySlug") or city_slug)
     if not city_translation_exists(country_slug, resolved_city_slug, lang):
         abort(404)
-    places = [
-        p
-        for p in dedupe_places(CITY_PLACES_BY_COUNTRYSLUG_CITYSLUG.get((country_slug, resolved_city_slug), []))
-        if place_translation_exists(
-            country_slug,
-            resolved_city_slug,
-            str(p.get("slug") or p.get("placeSlug") or ""),
-            lang,
-        )
-    ]
     city_view = dict(city)
     city_view["citySlug"] = resolved_city_slug
     city_view["displayName"] = city_display_name_cached_for_lang(city_view, lang)
     city_view["name"] = city_view["displayName"]
     places_view = []
-    for p in places:
-        row = dict(p)
-        row["countrySlug"] = country_slug
-        row["citySlug"] = resolved_city_slug
-        row["countryName"] = country_view["displayName"]
-        row["cityName"] = city_view["displayName"]
-        row["category"] = row.get("category") or "Landmark"
-        row["categoryLabel"] = localized_category_label(str(row.get("category") or "Landmark"), lang)
-        row["displayName"] = place_display_name_cached_for_lang(row, lang)
-        row["name"] = row["displayName"]
-        places_view.append(row)
+    for p in dedupe_places(CITY_PLACES_BY_COUNTRYSLUG_CITYSLUG.get((country_slug, resolved_city_slug), [])):
+        row = public_place_card_for_lang(
+            p,
+            lang=lang,
+            country_slug=country_slug,
+            city_slug=resolved_city_slug,
+            country_name=country_view["displayName"],
+            city_name=city_view["displayName"],
+        )
+        if row:
+            places_view.append(row)
 
     trn = t(lang)
     langs_label = ", ".join(x.upper() for x in LANG_ORDER)
@@ -14858,7 +14926,7 @@ def city_page(lang: str, country_slug: str, city_slug: str):
     place_schema_items = [
         {
             "name": p.get("displayName") or p.get("name") or "",
-            "url": place_url(lang, country_slug, resolved_city_slug, str(p.get("slug") or p.get("placeSlug") or "")),
+            "url": str(p.get("url") or place_url(DEFAULT_LANG, country_slug, resolved_city_slug, str(p.get("slug") or p.get("placeSlug") or ""))),
         }
         for p in places_view[:24]
         if p.get("slug") or p.get("placeSlug")
@@ -14967,12 +15035,6 @@ def place_page(lang: str, country_slug: str, city_slug: str, place_slug: str):
         abort(404)
 
     places = dedupe_places(CITY_PLACES_BY_COUNTRYSLUG_CITYSLUG.get((country_slug, city_slug), []))
-    places = [
-        p
-        for p in places
-        if str(p.get("slug") or "") != place_slug
-        and place_translation_exists(country_slug, city_slug, str(p.get("slug") or p.get("placeSlug") or ""), lang)
-    ]
     city_view = dict(city)
     city_view["citySlug"] = city_slug
     city_view["displayName"] = city_display_name_cached_for_lang(city_view, lang)
@@ -14984,18 +15046,22 @@ def place_page(lang: str, country_slug: str, city_slug: str, place_slug: str):
     place_view["name"] = place_view["displayName"]
     place_view["category"] = place_view.get("category") or "Landmark"
     place_view["categoryLabel"] = localized_category_label(str(place_view.get("category") or "Landmark"), lang)
+    place_view["url"] = place_url(lang, country_slug, city_slug, place_slug)
+    place_view["hasTranslation"] = True
     places_view = []
     for p in places:
-        row = dict(p)
-        row["countrySlug"] = country_slug
-        row["citySlug"] = city_slug
-        row["countryName"] = country_view["displayName"]
-        row["cityName"] = city_view["displayName"]
-        row["category"] = row.get("category") or "Landmark"
-        row["categoryLabel"] = localized_category_label(str(row.get("category") or "Landmark"), lang)
-        row["displayName"] = place_display_name_cached_for_lang(row, lang)
-        row["name"] = row["displayName"]
-        places_view.append(row)
+        if str(p.get("slug") or p.get("placeSlug") or "") == place_slug:
+            continue
+        row = public_place_card_for_lang(
+            p,
+            lang=lang,
+            country_slug=country_slug,
+            city_slug=city_slug,
+            country_name=country_view["displayName"],
+            city_name=city_view["displayName"],
+        )
+        if row:
+            places_view.append(row)
 
     trn = t(lang)
     seo_title = i18n_fmt(
@@ -15070,7 +15136,7 @@ def place_page(lang: str, country_slug: str, city_slug: str, place_slug: str):
     nearby_schema_items = [
         {
             "name": p.get("displayName") or p.get("name") or "",
-            "url": place_url(lang, country_slug, city_slug, str(p.get("slug") or p.get("placeSlug") or "")),
+            "url": str(p.get("url") or place_url(DEFAULT_LANG, country_slug, city_slug, str(p.get("slug") or p.get("placeSlug") or ""))),
         }
         for p in places_view[:12]
         if p.get("slug") or p.get("placeSlug")

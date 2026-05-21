@@ -1132,7 +1132,7 @@ async function renderPlacesOnMap() {
     const name = String(p.name || "");
     const isCurrent = ctx.currentPlaceSlug && slug === ctx.currentPlaceSlug;
 
-    const url = placeUrl(ctx, slug);
+    const url = p?.url ? String(p.url) : placeUrl(ctx, slug);
     const img = placeImgUrl(ctx, slug);
     const category = placeCategoryLabel(p);
     const tip = `

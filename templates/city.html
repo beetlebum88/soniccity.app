@@ -171,9 +171,10 @@
               <h3>{{ T["nearby_places"] }}</h3>
               <div class="ux-miniList ux-companionPlaces">
                 {% for p in places[:6] %}
+                  {% set place_href = p.url if p.url is defined and p.url else route_prefix ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
                   {% set place_category = p.categoryLabel if p.categoryLabel is defined and p.categoryLabel else (p.category if p.category is defined and p.category else T["category_landmark"]) %}
                   <article class="ux-miniPlace" data-side-place-slug="{{ p.slug }}">
-                    <a href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}">
+                    <a href="{{ place_href }}">
                       <img src="/media/place/en/{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}" alt="{{ p.name }}" loading="lazy" decoding="async"/>
                       <span>
                         <b>{{ p.name }}</b>
@@ -216,15 +217,16 @@
           <button type="button">{{ T["filter_viewpoints"] }}</button>
         </div>
         <div class="ux-cardGrid ux-placeGrid">
-          {% for p in places[:18] %}
+          {% for p in places %}
+            {% set place_href = p.url if p.url is defined and p.url else route_prefix ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
             <article class="ux-guideCard ux-placeGuideCard ag-placeCard" data-place-slug="{{ p.slug }}">
-              <a class="ag-placeImageLink" href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}" aria-label="Open {{ p.name }} guide">
+              <a class="ag-placeImageLink" href="{{ place_href }}" aria-label="Open {{ p.name }} guide">
                 <img src="/media/place/en/{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}"
                      alt="{{ p.name }}" loading="lazy" decoding="async"/>
               </a>
               <div class="ux-guideCardBody">
                 <span class="ux-badge">{{ T["badge_audio"] }}</span>
-                <h3><a href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}">{{ p.name }}</a></h3>
+                <h3><a href="{{ place_href }}">{{ p.name }}</a></h3>
                 <p>{{ T["place_nearby_text_tpl"].replace("{city}", city.name) }}</p>
                 <div class="ux-cardMeta">
                   <span>{{ T["home_ready_to_listen"] }}</span>
@@ -233,7 +235,7 @@
                 <div class="ag-placeCardActions">
                   <button class="ag-mapAction ag-mapActionPrimary ag-placePlay" type="button" data-place-play="{{ p.slug }}">{{ T["listen_all"] }}</button>
                   <button class="ag-mapAction ag-placeRoute" type="button" data-place-route="{{ p.slug }}">{{ T["map_route"] }}</button>
-                  <a class="ag-mapAction" href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}">{{ T["common_open"] }}</a>
+                  <a class="ag-mapAction" href="{{ place_href }}">{{ T["common_open"] }}</a>
                 </div>
               </div>
             </article>
@@ -266,7 +268,8 @@
           <span class="ux-cardCta">{{ T["city_open_country"] }}</span>
         </a>
         {% for p in places[:2] %}
-          <a class="ux-sideCard" href="{{ route_prefix }}{{ country.slug }}/{{ city.citySlug }}/{{ p.slug }}">
+          {% set place_href = p.url if p.url is defined and p.url else route_prefix ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
+          <a class="ux-sideCard" href="{{ place_href }}">
             <h3>{{ p.name }}</h3>
             <p>{{ T["city_related_place_sub_tpl"].replace("{city}", city.name) }}</p>
             <span class="ux-cardCta">{{ T["city_open_place"] }}</span>
@@ -342,8 +345,8 @@
             <button type="button" data-map-filter="viewpoint">{{ T["filter_viewpoints"] }}</button>
           </div>
           <ul class="ag-mapPlaceList" id="cityMapPlaceList">
-            {% for p in places[:30] %}
-              {% set place_url = route_prefix ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
+            {% for p in places %}
+              {% set place_url = p.url if p.url is defined and p.url else route_prefix ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
               {% set place_img = "/media/place/en/" ~ country.slug ~ "/" ~ city.citySlug ~ "/" ~ p.slug %}
               {% set place_category = p.category if p.category is defined and p.category else "Landmark" %}
               <li data-place-row="{{ p.slug }}" data-place-category="{{ place_category|lower }}">
