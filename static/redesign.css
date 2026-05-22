@@ -9381,6 +9381,30 @@ body{
   font-weight:950 !important;
 }
 
+.ag-player-titleLink,
+.ag-nowMetaLink{
+  color:inherit !important;
+  text-decoration:none;
+}
+
+.ag-player-titleLink{
+  display:inline-block;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  vertical-align:bottom;
+  white-space:nowrap;
+}
+
+.ag-player-titleLink:hover,
+.ag-player-titleLink:focus-visible,
+.ag-nowMetaLink:hover,
+.ag-nowMetaLink:focus-visible{
+  color:#7ddcff !important;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+
 .ag-player-now{
   display:flex !important;
   align-items:center !important;

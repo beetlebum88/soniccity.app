@@ -2035,6 +2035,10 @@ function queueAccountListeningState(state, force = false) {
 }
 
 function currentGuideUrlWithPlayerAnchor(entity) {
+  return currentGuideUrl(entity, true);
+}
+
+function currentGuideUrl(entity, withPlayerAnchor = false) {
   const countrySlug = String(entity?.countrySlug || "").trim();
   const citySlug = String(entity?.citySlug || entity?.slug || "").trim();
   const placeSlug = String(entity?.placeSlug || "").trim();
@@ -2046,7 +2050,24 @@ function currentGuideUrlWithPlayerAnchor(entity) {
   } else if (countrySlug && !citySlug) {
     url = localizedRoute(activeAppLang || window.APP_LANG || "en", [countrySlug]);
   }
-  return `${url.replace(/#.*$/, "")}#stickyPlayer`;
+  const clean = url.replace(/#.*$/, "");
+  return withPlayerAnchor ? `${clean}#stickyPlayer` : clean;
+}
+
+function currentPlaybackGuideUrl(withPlayerAnchor = false) {
+  const entity = playbackEntityCity || selectedCity || {};
+  return currentGuideUrl(entity, withPlayerAnchor);
+}
+
+function currentPlaybackGuideTitle(fallback = "") {
+  return String(
+    cityDisplayName(playbackEntityCity || selectedCity) ||
+    globalPlayerState.currentEntityTitle ||
+    selectedArticle?.title ||
+    document.querySelector("h1")?.textContent ||
+    fallback ||
+    ""
+  ).trim();
 }
 
 function currentGuideImage() {
@@ -2488,7 +2509,7 @@ function requireLoginForPlayback() {
     return false;
   }
   showPlayerDock();
-  setPlayerHeader("SonicCity", tr("audio_guide_generic", "Audio guide"));
+  setPlayerHeader(currentPlaybackGuideTitle("SonicCity"), tr("audio_guide_generic", "Audio guide"));
   setPlayerStatusLabel(tr("player_signup_cta", "Sign Up"));
   setPlayerAuthGate(true);
   setStatus(tr("player_auth_gate", "To Listen for Free, Sign Up."));
@@ -2554,6 +2575,7 @@ function inlineNowPlayingState() {
       label: liveState.isPlaying ? tr("player_now_playing", "Now playing") : tr("player_continue_listening", "Continue listening"),
       title: liveState.currentSectionTitle || nowPlaying.blockTitle || tr("listen_all", "Play all"),
       meta: liveState.currentEntityTitle || nowPlaying.cityTitle || "",
+      metaUrl: currentPlaybackGuideUrl(false),
       currentTime: Number(liveState.currentTime),
       duration: Number(liveState.duration),
     };
@@ -2568,6 +2590,7 @@ function inlineNowPlayingState() {
       label: tr("player_continue_listening", "Continue listening"),
       title: String(saved.nowPlaying?.blockTitle || item.blockTitle || tr("listen_all", "Play all")),
       meta: String(saved.nowPlaying?.cityTitle || saved.selectedCity?.name || ""),
+      metaUrl: currentGuideUrl(saved.selectedCity || {}, false),
       currentTime: Number(saved.currentTime),
       duration: 0,
     };
@@ -2596,9 +2619,20 @@ function syncInlineNowPlayingCards() {
     const fill = card.querySelector("[data-ag-now-fill]");
     const button = card.querySelector("[data-ag-continue-toggle]");
     if (label) {
-      label.textContent = state.meta
-        ? `${state.label} · ${state.meta}`
-        : state.label;
+      label.replaceChildren(document.createTextNode(state.label || ""));
+      if (state.meta) {
+        label.appendChild(document.createTextNode(" · "));
+        const metaUrl = state.metaUrl || currentPlaybackGuideUrl(false);
+        if (metaUrl) {
+          const link = document.createElement("a");
+          link.className = "ag-nowMetaLink";
+          link.href = metaUrl;
+          link.textContent = state.meta;
+          label.appendChild(link);
+        } else {
+          label.appendChild(document.createTextNode(state.meta));
+        }
+      }
     }
     if (title) title.textContent = state.title;
     if (fill) fill.style.width = `${Math.round(ratio * 100)}%`;
@@ -2951,7 +2985,19 @@ function setPlayerHeader(blockTitle, metaText) {
 
   const t = $("plTitle");
   const m = $("plMeta");
-  if (t) t.textContent = titleText;
+  if (t) {
+    t.replaceChildren();
+    const titleUrl = titleText && titleText !== "—" ? currentPlaybackGuideUrl(false) : "";
+    if (titleUrl) {
+      const link = document.createElement("a");
+      link.className = "ag-player-titleLink";
+      link.href = titleUrl;
+      link.textContent = titleText;
+      t.appendChild(link);
+    } else {
+      t.textContent = titleText;
+    }
+  }
   if (m) m.textContent = subText;
   syncGlobalPlayerState({
     currentEntityTitle: titleText || "",
