@@ -38,9 +38,3 @@ Disallow: /*?q=
 Disallow: /*?search=
 Allow: /
 Sitemap: https://soniccity.app/sitemap.xml
-Sitemap: https://soniccity.app/sitemap_default.xml
-Sitemap: https://soniccity.app/fr/sitemap.xml
-Sitemap: https://soniccity.app/es/sitemap.xml
-Sitemap: https://soniccity.app/it/sitemap.xml
-Sitemap: https://soniccity.app/uk/sitemap.xml
-Sitemap: https://soniccity.app/de/sitemap.xml

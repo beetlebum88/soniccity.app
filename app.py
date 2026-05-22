@@ -6639,15 +6639,7 @@ def default_robots_text() -> str:
                 "Disallow: /",
             ]
         ) + "\n"
-    sitemap_paths = [
-        "/sitemap.xml",
-        "/sitemap_default.xml",
-        "/fr/sitemap.xml",
-        "/es/sitemap.xml",
-        "/it/sitemap.xml",
-        "/uk/sitemap.xml",
-        "/de/sitemap.xml",
-    ]
+    sitemap_paths = ["/sitemap.xml"]
     sitemap_lines = [f"Sitemap: {absolute_url(path) if has_request_context() else f'{SITE_URL}{path}'}" for path in sitemap_paths]
     return "\n".join(
         [
@@ -11424,8 +11416,14 @@ def gone(error):
 
 @app.get("/sitemap.xml")
 def sitemap_xml():
-    rows = [sitemap_index_entry(sitemap_language_index_path(DEFAULT_LANG), sitemap_lastmod())]
-    rows.extend(sitemap_index_entry(sitemap_language_index_path(lang_slug), sitemap_lastmod()) for lang_slug in LANG_ORDER if lang_slug != DEFAULT_LANG)
+    rows = [
+        sitemap_index_entry(
+            sitemap_category_path(lang_slug, category),
+            sitemap_category_lastmod(lang_slug, category),
+        )
+        for lang_slug in LANG_ORDER
+        for category in SITEMAP_CATEGORY_ORDER
+    ]
     return sitemap_index_response(rows)
 
 
