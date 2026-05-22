@@ -1,0 +1,100 @@
+{% set tripalto_entity_type = tripalto_entity_type if tripalto_entity_type is defined else "city" %}
+{% set tripalto_destination_name = tripalto_destination_name if tripalto_destination_name is defined else "" %}
+{% set tripalto_country_slug = tripalto_country_slug if tripalto_country_slug is defined else "" %}
+{% set tripalto_city_slug = tripalto_city_slug if tripalto_city_slug is defined else "" %}
+{% set tripalto_cta = {
+  "en": {
+    "kicker": "TRIPALTO TICKETS",
+    "city_title": "Need tickets to {destination}?",
+    "country_title": "Need tickets for {destination}?",
+    "city_body": "Compare flights, trains and buses to {destination} on TripAlto before you start listening.",
+    "country_body": "Compare flights, trains and buses for {destination} on TripAlto before you start listening.",
+    "button": "Buy tickets on TripAlto",
+    "flight": "Flight",
+    "train": "Train",
+    "bus": "Bus"
+  },
+  "fr": {
+    "kicker": "BILLETS TRIPALTO",
+    "city_title": "Besoin de billets pour {destination} ?",
+    "country_title": "Besoin de billets pour {destination} ?",
+    "city_body": "Comparez vols, trains et bus vers {destination} sur TripAlto avant de commencer votre audioguide.",
+    "country_body": "Comparez vols, trains et bus pour {destination} sur TripAlto avant de commencer votre audioguide.",
+    "button": "Acheter sur TripAlto",
+    "flight": "Vol",
+    "train": "Train",
+    "bus": "Bus"
+  },
+  "es": {
+    "kicker": "BILLETES TRIPALTO",
+    "city_title": "¿Necesitas billetes a {destination}?",
+    "country_title": "¿Necesitas billetes para {destination}?",
+    "city_body": "Compara vuelos, trenes y buses a {destination} en TripAlto antes de empezar a escuchar.",
+    "country_body": "Compara vuelos, trenes y buses para {destination} en TripAlto antes de empezar a escuchar.",
+    "button": "Comprar en TripAlto",
+    "flight": "Vuelo",
+    "train": "Tren",
+    "bus": "Bus"
+  },
+  "it": {
+    "kicker": "BIGLIETTI TRIPALTO",
+    "city_title": "Ti servono biglietti per {destination}?",
+    "country_title": "Ti servono biglietti per {destination}?",
+    "city_body": "Confronta voli, treni e bus per {destination} su TripAlto prima di iniziare l'audioguida.",
+    "country_body": "Confronta voli, treni e bus per {destination} su TripAlto prima di iniziare l'audioguida.",
+    "button": "Compra su TripAlto",
+    "flight": "Volo",
+    "train": "Treno",
+    "bus": "Bus"
+  },
+  "ua": {
+    "kicker": "КВИТКИ TRIPALTO",
+    "city_title": "Квитки TripAlto: {destination}",
+    "country_title": "Квитки TripAlto: {destination}",
+    "city_body": "Порівняй літаки, потяги й автобуси на TripAlto перед тим, як слухати гід. Напрямок: {destination}.",
+    "country_body": "Порівняй літаки, потяги й автобуси на TripAlto перед тим, як слухати гід. Напрямок: {destination}.",
+    "button": "Купити на TripAlto",
+    "flight": "Літак",
+    "train": "Потяг",
+    "bus": "Автобус"
+  },
+  "de": {
+    "kicker": "TRIPALTO TICKETS",
+    "city_title": "Brauchst du Tickets nach {destination}?",
+    "country_title": "Brauchst du Tickets für {destination}?",
+    "city_body": "Vergleiche Flüge, Züge und Busse nach {destination} auf TripAlto, bevor du den Audioguide startest.",
+    "country_body": "Vergleiche Flüge, Züge und Busse für {destination} auf TripAlto, bevor du den Audioguide startest.",
+    "button": "Tickets auf TripAlto kaufen",
+    "flight": "Flug",
+    "train": "Zug",
+    "bus": "Bus"
+  }
+} %}
+{% set tp = tripalto_cta.get(lang, tripalto_cta["en"]) %}
+{% set tp_title_key = "country_title" if tripalto_entity_type == "country" else "city_title" %}
+{% set tp_body_key = "country_body" if tripalto_entity_type == "country" else "city_body" %}
+<aside class="tp-travelCta"
+       id="tripaltoTickets"
+       aria-label="TripAlto travel tickets"
+       data-tripalto-entity-type="{{ tripalto_entity_type }}"
+       data-tripalto-country-slug="{{ tripalto_country_slug }}"
+       data-tripalto-city-slug="{{ tripalto_city_slug }}">
+  <div class="tp-travelCtaPanel">
+    <div class="tp-travelCtaCopy">
+      <span class="tp-travelCtaKicker">{{ tp.kicker }}</span>
+      <p class="tp-travelCtaTitle">{{ tp[tp_title_key].replace("{destination}", tripalto_destination_name) }}</p>
+      <p class="tp-travelCtaBody">{{ tp[tp_body_key].replace("{destination}", tripalto_destination_name) }}</p>
+      <div class="tp-travelCtaPills">
+        <a href="#tripaltoTickets" rel="nofollow sponsored noopener noreferrer" data-tripalto-cta-link="flight">{{ tp.flight }}</a>
+        <a href="#tripaltoTickets" rel="nofollow sponsored noopener noreferrer" data-tripalto-cta-link="train">{{ tp.train }}</a>
+        <a href="#tripaltoTickets" rel="nofollow sponsored noopener noreferrer" data-tripalto-cta-link="bus">{{ tp.bus }}</a>
+      </div>
+      <a class="tp-travelCtaButton" href="#tripaltoTickets" rel="nofollow sponsored noopener noreferrer" data-tripalto-cta-link="destination">{{ tp.button }}</a>
+    </div>
+    <div class="tp-travelCtaStage" aria-hidden="true">
+      <img class="tp-ticketImg tp-ticketImgTrain" src="{{ url_for('static', filename='img/tripalto/tripalto-train-ticket.webp') }}?v={{ ASSET_VER }}" alt="" width="355" height="540" loading="lazy" decoding="async"/>
+      <img class="tp-ticketImg tp-ticketImgBus" src="{{ url_for('static', filename='img/tripalto/tripalto-bus-ticket.webp') }}?v={{ ASSET_VER }}" alt="" width="360" height="528" loading="lazy" decoding="async"/>
+      <img class="tp-ticketImg tp-ticketImgFlight" src="{{ url_for('static', filename='img/tripalto/tripalto-flight-ticket.webp') }}?v={{ ASSET_VER }}" alt="" width="359" height="540" loading="lazy" decoding="async"/>
+    </div>
+  </div>
+</aside>

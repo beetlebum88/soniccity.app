@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="{{ HTML_LANG if HTML_LANG else CURRENT_LANG }}">
 <head>
-  {% set ASSET_VER = "20260522-seo-robots-1" %}
+  {% set ASSET_VER = "20260522-tripalto-cta-10" %}
   {% set _csrf_token = CSRF_TOKEN() if CSRF_TOKEN is defined else '' %}
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -24,10 +24,19 @@
   <meta name="description" content="{{ _seo_desc }}"/>
   {% if _seo_keywords %}<meta name="keywords" content="{{ _seo_keywords }}"/>{% endif %}
   <meta name="robots" content="{{ _seo_robots }}"/>
-  <meta name="theme-color" content="#4b7bec"/>
+  <meta name="theme-color" content="#07306e"/>
   <meta name="application-name" content="{{ BRAND_NAME }}"/>
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/soniccity-favicon.png') }}?v={{ ASSET_VER }}"/>
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/soniccity-favicon.png') }}?v={{ ASSET_VER }}"/>
+  <meta name="apple-mobile-web-app-title" content="{{ BRAND_NAME }}"/>
+  <meta name="mobile-web-app-title" content="{{ BRAND_NAME }}"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+  <link rel="manifest" href="/site.webmanifest"/>
 
   <link rel="canonical" href="{{ SEO_CANONICAL_URL }}"/>
   {% for alt in SEO_HREFLANG_LINKS %}
@@ -189,6 +198,19 @@
         </div>
         <p class="ct-footerMuted mb-0">{{ T["footer_tagline"] }}</p>
         <a class="ct-footerMapBtn" href="{{ NAV_MAP_URL }}">{{ T["cta_open_map"] }}</a>
+        <a class="sc-googleSourceBadge"
+           href="https://google.com/preferences/source?q={{ SITE_DOMAIN }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           title="{{ T['footer_google_source_title'] }}"
+           aria-label="{{ T['footer_google_source_title'] }}">
+          <img src="{{ url_for('static', filename='img/google-preferred-source.svg') }}?v={{ ASSET_VER }}"
+               alt="{{ T['footer_google_source_alt'] }}"
+               width="214"
+               height="48"
+               loading="lazy"
+               decoding="async"/>
+        </a>
       </div>
 
       <div class="ct-footerCols ct-footerColsWide">

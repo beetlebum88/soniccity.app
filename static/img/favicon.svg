@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="SonicCity">
+  <defs>
+    <linearGradient id="scg" x1="14" y1="14" x2="82" y2="82" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#34d5ff"/>
+      <stop offset=".55" stop-color="#5b7cff"/>
+      <stop offset="1" stop-color="#9b55ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="22" fill="#071329"/>
+  <path d="M63 24H39c-9 0-16 6-16 14s7 14 16 14h18c5 0 9 3 9 7s-4 7-9 7H25" fill="none" stroke="url(#scg)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M31 32h28M37 64h24" fill="none" stroke="#dff7ff" stroke-opacity=".9" stroke-width="5" stroke-linecap="round"/>
+</svg>

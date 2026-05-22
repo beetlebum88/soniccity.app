@@ -69,7 +69,7 @@
     if (!supported.has(nl)) return null;
 
     const parts = String(pathname || "").split("/").filter(Boolean);
-    const reserved = new Set(["api", "media", "static", "img", "admin", "main", "c", "robots.txt", "sitemap.xml", "favicon.ico"]);
+    const reserved = new Set(["api", "media", "static", "img", "admin", "main", "c", "robots.txt", "sitemap.xml", "favicon.ico", "favicon.svg", "favicon-96x96.png", "favicon-48x48.png", "favicon-32x32.png", "favicon-16x16.png", "apple-touch-icon.png", "web-app-manifest-192x192.png", "web-app-manifest-512x512.png", "site.webmanifest"]);
     const head = String(parts[0] || "").toLowerCase();
 
     if (!parts.length) {
@@ -438,6 +438,64 @@
         form.submit();
       }
     });
+  });
+
+  // -------- TripAlto CTA links --------
+  const tripaltoBaseUrl = "https://www.tripalto.com";
+  const tripaltoLangBySonicCityLang = {
+    en: "",
+    fr: "fr",
+    es: "es",
+    it: "it",
+    uk: "ua",
+    ua: "ua",
+    de: "de",
+  };
+  const tripaltoCtaPaths = {
+    flight: [],
+    train: ["train"],
+    bus: ["bus"],
+  };
+
+  function cleanTripaltoSlug(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "");
+  }
+
+  function tripaltoLangSlug() {
+    const rawLang = String(window.APP_LANG || window.APP_LANG_INTERNAL || "en").trim().toLowerCase();
+    return tripaltoLangBySonicCityLang[rawLang] ?? "";
+  }
+
+  function tripaltoUrl(parts) {
+    const cleanParts = [tripaltoLangSlug(), ...(parts || [])].map(cleanTripaltoSlug).filter(Boolean);
+    return `${tripaltoBaseUrl}/${cleanParts.length ? `${cleanParts.join("/")}/` : ""}`;
+  }
+
+  function tripaltoDestinationParts(link) {
+    const root = link.closest(".tp-travelCta");
+    const countrySlug = link.dataset.tripaltoCountrySlug || root?.dataset.tripaltoCountrySlug;
+    const citySlug = link.dataset.tripaltoCitySlug || root?.dataset.tripaltoCitySlug;
+    return [countrySlug, citySlug].filter(Boolean);
+  }
+
+  document.querySelectorAll("a[data-tripalto-cta-link]").forEach((link) => {
+    link.setAttribute("target", "_blank");
+    link.setAttribute("rel", "nofollow sponsored noopener noreferrer");
+  });
+
+  document.addEventListener("click", (event) => {
+    const link = event.target?.closest?.("[data-tripalto-cta-link]");
+    if (!link) return;
+    event.preventDefault();
+    const linkType = link.getAttribute("data-tripalto-cta-link");
+    if (linkType !== "destination" && !(linkType in tripaltoCtaPaths)) return;
+    const parts = linkType === "destination" ? tripaltoDestinationParts(link) : tripaltoCtaPaths[linkType];
+    const url = tripaltoUrl(parts);
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
   });
 
   // -------- CSS-only layout animations (JS only toggles visibility) --------

@@ -14834,6 +14834,150 @@
       "updatedBy": "seed"
     },
     {
+      "id": "footer:footer_google_source_alt:de",
+      "key": "footer_google_source_alt",
+      "namespace": "footer",
+      "language": "de",
+      "value": "Google-Badge für die bevorzugte Quelle SonicCity",
+      "description": "Google preferred source badge for SonicCity",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
+      "id": "footer:footer_google_source_alt:en",
+      "key": "footer_google_source_alt",
+      "namespace": "footer",
+      "language": "en",
+      "value": "Google preferred source badge for SonicCity",
+      "description": "Google preferred source badge for SonicCity",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
+      "id": "footer:footer_google_source_alt:es",
+      "key": "footer_google_source_alt",
+      "namespace": "footer",
+      "language": "es",
+      "value": "Insignia de fuente preferida de Google para SonicCity",
+      "description": "Google preferred source badge for SonicCity",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
+      "id": "footer:footer_google_source_alt:fr",
+      "key": "footer_google_source_alt",
+      "namespace": "footer",
+      "language": "fr",
+      "value": "Badge de source préférée Google pour SonicCity",
+      "description": "Google preferred source badge for SonicCity",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
+      "id": "footer:footer_google_source_alt:it",
+      "key": "footer_google_source_alt",
+      "namespace": "footer",
+      "language": "it",
+      "value": "Badge fonte preferita Google per SonicCity",
+      "description": "Google preferred source badge for SonicCity",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
+      "id": "footer:footer_google_source_alt:uk",
+      "key": "footer_google_source_alt",
+      "namespace": "footer",
+      "language": "uk",
+      "value": "Бейдж бажаного джерела Google для SonicCity",
+      "description": "Google preferred source badge for SonicCity",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
+      "id": "footer:footer_google_source_title:de",
+      "key": "footer_google_source_title",
+      "namespace": "footer",
+      "language": "de",
+      "value": "Füge SonicCity in Google als bevorzugte Quelle hinzu, um aktuelle Audioguides, Städtetipps, Routenvorschläge und Reiseinfos für deine nächste Reise zu erhalten.",
+      "description": "Add SonicCity as your preferred source in Google to get up-to-date audio guides, city tips, route ideas, and travel insights when planning your next trip.",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
+      "id": "footer:footer_google_source_title:en",
+      "key": "footer_google_source_title",
+      "namespace": "footer",
+      "language": "en",
+      "value": "Add SonicCity as your preferred source in Google to get up-to-date audio guides, city tips, route ideas, and travel insights when planning your next trip.",
+      "description": "Add SonicCity as your preferred source in Google to get up-to-date audio guides, city tips, route ideas, and travel insights when planning your next trip.",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
+      "id": "footer:footer_google_source_title:es",
+      "key": "footer_google_source_title",
+      "namespace": "footer",
+      "language": "es",
+      "value": "Añade SonicCity como fuente preferida en Google para recibir audioguías actualizadas, consejos de ciudades, ideas de rutas e información de viaje al planificar tu próximo viaje.",
+      "description": "Add SonicCity as your preferred source in Google to get up-to-date audio guides, city tips, route ideas, and travel insights when planning your next trip.",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
+      "id": "footer:footer_google_source_title:fr",
+      "key": "footer_google_source_title",
+      "namespace": "footer",
+      "language": "fr",
+      "value": "Ajoutez SonicCity comme source préférée dans Google pour recevoir des guides audio à jour, des conseils sur les villes, des idées d'itinéraires et des informations de voyage pour préparer votre prochain trajet.",
+      "description": "Add SonicCity as your preferred source in Google to get up-to-date audio guides, city tips, route ideas, and travel insights when planning your next trip.",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
+      "id": "footer:footer_google_source_title:it",
+      "key": "footer_google_source_title",
+      "namespace": "footer",
+      "language": "it",
+      "value": "Aggiungi SonicCity come fonte preferita in Google per ricevere audioguide aggiornate, consigli sulle città, idee di itinerario e informazioni di viaggio quando pianifichi il tuo prossimo viaggio.",
+      "description": "Add SonicCity as your preferred source in Google to get up-to-date audio guides, city tips, route ideas, and travel insights when planning your next trip.",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
+      "id": "footer:footer_google_source_title:uk",
+      "key": "footer_google_source_title",
+      "namespace": "footer",
+      "language": "uk",
+      "value": "Додайте SonicCity як бажане джерело в Google, щоб отримувати актуальні аудіогіди, поради щодо міст, ідеї маршрутів та інсайти для планування наступної подорожі.",
+      "description": "Add SonicCity as your preferred source in Google to get up-to-date audio guides, city tips, route ideas, and travel insights when planning your next trip.",
+      "status": "translated",
+      "createdAt": "2026-05-22T15:28:22Z",
+      "updatedAt": "2026-05-22T15:28:22Z",
+      "updatedBy": "seed"
+    },
+    {
       "id": "footer:footer_how:de",
       "key": "footer_how",
       "namespace": "footer",
@@ -39244,5 +39388,5 @@
   ],
   "pageTranslations": [],
   "emailTemplates": [],
-  "updatedAt": "2026-05-20T23:05:47Z"
+  "updatedAt": "2026-05-22T15:28:22Z"
 }

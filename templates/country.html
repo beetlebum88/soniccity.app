@@ -124,6 +124,12 @@
               <div class="ux-loadingSkeleton" aria-label="Loading audio sections"></div>
             </div>
           </article>
+
+          {% set tripalto_entity_type = "country" %}
+          {% set tripalto_destination_name = country.name %}
+          {% set tripalto_country_slug = country.slug %}
+          {% set tripalto_city_slug = "" %}
+          {% include "_tripalto_cta.html" %}
         </main>
 
         <aside class="ux-guideSide">

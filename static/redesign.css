@@ -2611,6 +2611,42 @@ a{color:inherit}
   box-shadow:0 12px 28px rgba(41,214,255,.28);
 }
 
+.sc-googleSourceBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:max-content;
+  max-width:100%;
+  min-height:48px;
+  margin-top:2px;
+  border-radius:999px;
+  text-decoration:none;
+  transition:transform .18s ease, filter .18s ease;
+}
+
+.sc-googleSourceBadge:hover,
+.sc-googleSourceBadge:focus-visible{
+  transform:translateY(-1px);
+  filter:brightness(1.04);
+}
+
+.sc-googleSourceBadge:focus-visible{
+  outline:2px solid rgba(41,214,255,.72);
+  outline-offset:4px;
+}
+
+.sc-googleSourceBadge img{
+  display:block;
+  width:min(214px, 100%);
+  height:auto;
+}
+
+@media (min-width: 992px){
+  .ct-footerIntro .sc-googleSourceBadge{
+    margin-top:14px;
+  }
+}
+
 .ct-footerCols{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -13971,5 +14007,348 @@ body:not(.PageAdmin):not(.PageAdminCms):not(.PageDjangoAdmin) :is(button,.btn,.a
 
   :is(.PageCity,.PagePlace,.PageCountry) #storySections.ux-playlist .ag-iconBtn{
     width:100% !important;
+  }
+}
+
+/* TripAlto ticket CTA on city and country guide pages. */
+.tp-travelCta{
+  margin:clamp(22px, 4vw, 34px) 0 clamp(32px, 5vw, 52px);
+  scroll-margin-top:170px;
+}
+
+.tp-travelCtaPanel{
+  position:relative;
+  isolation:isolate;
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) minmax(280px, 360px);
+  gap:clamp(20px, 4vw, 34px);
+  min-height:252px;
+  padding:clamp(22px, 3.4vw, 34px);
+  overflow:hidden;
+  border:2px solid transparent;
+  border-radius:26px;
+  background:
+    linear-gradient(135deg, rgba(16,24,54,.98) 0%, rgba(6,10,25,.98) 48%, rgba(17,18,44,.98) 100%) padding-box,
+    linear-gradient(115deg, #29d6ff 0%, #8d5bff 24%, #ff4fd8 46%, #f0b35e 68%, #19d8a0 84%, #29d6ff 100%) border-box;
+  background-size:auto, 320% 320%;
+  background-position:center, 0% 50%;
+  box-shadow:0 26px 64px rgba(0,0,0,.36), 0 0 38px rgba(41,214,255,.1), 0 0 0 1px rgba(255,255,255,.06) inset;
+  color:var(--nx-ink);
+  text-decoration:none;
+  animation:tpCtaBorderFlow 6.5s linear infinite;
+}
+
+.tp-travelCtaPanel::before{
+  content:"";
+  position:absolute;
+  z-index:4;
+  inset:0;
+  border-radius:inherit;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(0,0,0,.34);
+  pointer-events:none;
+}
+
+.tp-travelCtaPanel::after{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:0;
+  border-radius:inherit;
+  background:
+    linear-gradient(118deg, transparent 0 42%, rgba(41,214,255,.11) 42% 42.5%, transparent 42.5%),
+    linear-gradient(118deg, transparent 0 58%, rgba(141,91,255,.12) 58% 58.5%, transparent 58.5%),
+    linear-gradient(90deg, rgba(41,214,255,.1), transparent 28%, transparent 62%, rgba(255,79,216,.09)),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.04) 0 1px, transparent 1px 18px);
+  opacity:.9;
+  pointer-events:none;
+}
+
+.tp-travelCtaCopy{
+  position:relative;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  min-width:0;
+}
+
+.tp-travelCtaKicker{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:30px;
+  padding:6px 11px;
+  border:1px solid rgba(41,214,255,.26);
+  border-radius:999px;
+  background:linear-gradient(135deg, rgba(41,214,255,.14), rgba(141,91,255,.1));
+  color:#9eeaff;
+  font-size:12px;
+  font-weight:850;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+.tp-travelCtaKicker::before{
+  content:"";
+  width:7px;
+  height:7px;
+  border-radius:999px;
+  background:#29d6ff;
+  box-shadow:0 0 0 4px rgba(41,214,255,.16), 0 0 18px rgba(41,214,255,.6);
+}
+
+.tp-travelCtaCopy .tp-travelCtaTitle{
+  max-width:620px;
+  margin:14px 0 10px;
+  color:#f5f7ff !important;
+  font-size:clamp(27px, 3.3vw, 42px);
+  line-height:1.06;
+  letter-spacing:0;
+}
+
+body:not(.PageAdmin):not(.PageAdminCms):not(.PageDjangoAdmin) .tp-travelCta .tp-travelCtaCopy .tp-travelCtaTitle{
+  color:#f5f7ff !important;
+}
+
+.tp-travelCtaCopy .tp-travelCtaBody{
+  max-width:590px;
+  margin:0;
+  color:#b7c3e5;
+  font-size:clamp(15px, 1.5vw, 18px);
+  line-height:1.58;
+}
+
+.tp-travelCtaPills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  margin-top:18px;
+}
+
+.tp-travelCtaPills a{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:36px;
+  padding:7px 13px;
+  border:1px solid rgba(140,164,225,.26);
+  border-radius:999px;
+  background:rgba(255,255,255,.07);
+  box-shadow:0 1px 0 rgba(255,255,255,.07) inset;
+  color:#e8efff;
+  font-size:13px;
+  font-weight:750;
+  text-decoration:none;
+  white-space:nowrap;
+  transition:transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+}
+
+.tp-travelCtaPills a::before{
+  content:"";
+  width:7px;
+  height:7px;
+  border-radius:999px;
+  background:#29d6ff;
+}
+
+.tp-travelCtaPills a:nth-child(2)::before{
+  background:#8d5bff;
+}
+
+.tp-travelCtaPills a:nth-child(3)::before{
+  background:#f0b35e;
+}
+
+.tp-travelCtaPills a:hover,
+.tp-travelCtaPills a:focus-visible{
+  transform:translateY(-1px);
+  border-color:rgba(41,214,255,.44);
+  background:rgba(255,255,255,.12);
+  color:#fff;
+}
+
+.tp-travelCtaButton{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  min-height:48px;
+  margin-top:20px;
+  padding:12px 20px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;
+  background:linear-gradient(135deg, rgba(41,214,255,.96) 0%, rgba(141,91,255,.96) 74%);
+  box-shadow:0 18px 34px rgba(41,214,255,.14), 0 16px 34px rgba(141,91,255,.16);
+  color:#fff;
+  font-weight:500;
+  text-decoration:none;
+  transition:transform .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.tp-travelCtaButton::after{
+  content:"";
+  width:8px;
+  height:8px;
+  border-top:2px solid currentColor;
+  border-right:2px solid currentColor;
+  transform:rotate(45deg);
+}
+
+.tp-travelCtaButton:hover,
+.tp-travelCtaButton:focus-visible{
+  transform:translateY(-2px);
+  background:linear-gradient(135deg, #4edfff 0%, #9b6cff 74%);
+  box-shadow:0 20px 42px rgba(41,214,255,.2), 0 18px 42px rgba(141,91,255,.22);
+}
+
+.tp-travelCtaStage{
+  position:relative;
+  z-index:2;
+  align-self:stretch;
+  min-height:222px;
+}
+
+.tp-ticketImg{
+  position:absolute;
+  z-index:3;
+  width:min(44%, 164px);
+  max-height:214px;
+  object-fit:contain;
+  opacity:.96;
+  filter:drop-shadow(0 22px 22px rgba(0,0,0,.34)) drop-shadow(0 0 18px rgba(41,214,255,.13)) saturate(1.05) contrast(1.02);
+  pointer-events:none;
+  user-select:none;
+  transform:translate(var(--tp-x, 0), 0) rotate(var(--tp-rotate, 0deg));
+  animation:tpTicketImageFloat 6s ease-in-out infinite;
+}
+
+.tp-ticketImgFlight{
+  z-index:7;
+  top:8px;
+  right:auto;
+  left:51%;
+  width:min(49%, 184px);
+  --tp-x:-50%;
+  --tp-rotate:-3deg;
+}
+
+.tp-ticketImgTrain{
+  z-index:3;
+  top:54px;
+  right:156px;
+  --tp-rotate:3deg;
+  animation-delay:-1.7s;
+}
+
+.tp-ticketImgBus{
+  z-index:5;
+  right:8px;
+  bottom:6px;
+  --tp-rotate:5deg;
+  animation-delay:-3s;
+}
+
+@keyframes tpTicketImageFloat{
+  0%,100%{transform:translate(var(--tp-x, 0), 0) rotate(var(--tp-rotate, 0deg));}
+  50%{transform:translate(var(--tp-x, 0), -8px) rotate(var(--tp-rotate, 0deg));}
+}
+
+@keyframes tpCtaBorderFlow{
+  0%{background-position:center, 0% 50%;}
+  100%{background-position:center, 320% 50%;}
+}
+
+@media (max-width: 900px){
+  .tp-travelCtaPanel{
+    grid-template-columns:1fr;
+  }
+
+  .tp-travelCtaPanel::after{
+    inset:0;
+  }
+
+  .tp-travelCtaStage{
+    justify-self:center;
+    width:100%;
+    max-width:480px;
+    min-height:210px;
+  }
+
+  .tp-ticketImg{
+    width:min(34vw, 150px);
+  }
+
+  .tp-ticketImgFlight{
+    left:51%;
+    top:6px;
+  }
+
+  .tp-ticketImgTrain{
+    right:auto;
+    left:34%;
+    top:48px;
+  }
+
+  .tp-ticketImgBus{
+    right:4%;
+  }
+}
+
+@media (max-width: 560px){
+  .tp-travelCtaPanel{
+    min-height:0;
+    padding:18px;
+    border-radius:22px;
+  }
+
+  .tp-travelCtaCopy .tp-travelCtaTitle{
+    font-size:clamp(25px, 9vw, 32px);
+  }
+
+  .tp-travelCtaPills{
+    width:100%;
+  }
+
+  .tp-travelCtaPills a{
+    flex:1 1 calc(33.333% - 7px);
+    justify-content:center;
+    min-width:0;
+  }
+
+  .tp-travelCtaButton{
+    width:100%;
+  }
+
+  .tp-travelCtaStage{
+    min-height:166px;
+    margin-top:4px;
+  }
+
+  .tp-ticketImg{
+    width:min(32vw, 118px);
+    max-height:154px;
+  }
+
+  .tp-ticketImgFlight{
+    left:51%;
+    top:2px;
+  }
+
+  .tp-ticketImgTrain{
+    left:31%;
+    top:36px;
+  }
+
+  .tp-ticketImgBus{
+    right:0;
+    bottom:0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .tp-travelCtaPanel,
+  .tp-ticketImg{
+    animation:none !important;
   }
 }

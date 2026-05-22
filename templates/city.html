@@ -122,6 +122,12 @@
             </div>
           </article>
 
+          {% set tripalto_entity_type = "city" %}
+          {% set tripalto_destination_name = city.name %}
+          {% set tripalto_country_slug = country.slug %}
+          {% set tripalto_city_slug = city.citySlug %}
+          {% include "_tripalto_cta.html" %}
+
           <section class="ux-sectionInner" id="aboutCity">
             <div class="ux-sectionHead">
               <span class="ux-kicker">{{ T["common_about"] }}</span>

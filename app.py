@@ -445,6 +445,8 @@ I18N: Dict[str, Dict[str, str]] = {
         "footer_links": "Links",
         "footer_languages": "Languages",
         "footer_countries": "Countries",
+        "footer_google_source_title": "Add SonicCity as your preferred source in Google to get up-to-date audio guides, city tips, route ideas, and travel insights when planning your next trip.",
+        "footer_google_source_alt": "Google preferred source badge for SonicCity",
         "seo_landing_title": "SonicCity: Real-time audio guides for nearby cities",
         "seo_landing_desc": "Map-first audio guide with live GPS, nearby city detection, and multilingual section playback for road trips.",
         "landing_hero_kicker": "AI-powered road companion",
@@ -609,6 +611,8 @@ I18N: Dict[str, Dict[str, str]] = {
         "footer_links": "Посилання",
         "footer_languages": "Мови",
         "footer_countries": "Країни",
+        "footer_google_source_title": "Додайте SonicCity як бажане джерело в Google, щоб отримувати актуальні аудіогіди, поради щодо міст, ідеї маршрутів та інсайти для планування наступної подорожі.",
+        "footer_google_source_alt": "Бейдж бажаного джерела Google для SonicCity",
         "seo_landing_title": "SonicCity: аудіогіди в реальному часі для міст поруч",
         "seo_landing_desc": "Map-first аудіогід з живим GPS, пошуком найближчих міст і багатомовним відтворенням по розділах для поїздок авто.",
         "landing_hero_kicker": "AI-помічник у дорозі",
@@ -773,6 +777,8 @@ I18N: Dict[str, Dict[str, str]] = {
         "footer_links": "Liens",
         "footer_languages": "Langues",
         "footer_countries": "Pays",
+        "footer_google_source_title": "Ajoutez SonicCity comme source préférée dans Google pour recevoir des guides audio à jour, des conseils sur les villes, des idées d'itinéraires et des informations de voyage pour préparer votre prochain trajet.",
+        "footer_google_source_alt": "Badge de source préférée Google pour SonicCity",
         "seo_landing_title": "SonicCity : guides audio en temps réel pour les villes proches",
         "seo_landing_desc": "Guide audio orienté carte avec GPS en direct, détection des villes proches et lecture multilingue par sections pour la route.",
         "landing_hero_kicker": "Copilote IA pour la route",
@@ -937,6 +943,8 @@ I18N: Dict[str, Dict[str, str]] = {
         "footer_links": "Enlaces",
         "footer_languages": "Idiomas",
         "footer_countries": "Países",
+        "footer_google_source_title": "Añade SonicCity como fuente preferida en Google para recibir audioguías actualizadas, consejos de ciudades, ideas de rutas e información de viaje al planificar tu próximo viaje.",
+        "footer_google_source_alt": "Insignia de fuente preferida de Google para SonicCity",
         "seo_landing_title": "SonicCity: guías de audio en tiempo real para ciudades cercanas",
         "seo_landing_desc": "Guía de audio orientada al mapa con GPS en vivo, detección de ciudades cercanas y reproducción multilingüe por secciones para carretera.",
         "landing_hero_kicker": "Compañero de ruta con IA",
@@ -1101,6 +1109,8 @@ I18N: Dict[str, Dict[str, str]] = {
         "footer_links": "Link",
         "footer_languages": "Lingue",
         "footer_countries": "Paesi",
+        "footer_google_source_title": "Aggiungi SonicCity come fonte preferita in Google per ricevere audioguide aggiornate, consigli sulle città, idee di itinerario e informazioni di viaggio quando pianifichi il tuo prossimo viaggio.",
+        "footer_google_source_alt": "Badge fonte preferita Google per SonicCity",
         "seo_landing_title": "SonicCity: audioguide in tempo reale per città vicine",
         "seo_landing_desc": "Audioguida map-first con GPS live, rilevamento città vicine e riproduzione multilingue per sezioni per i viaggi in auto.",
         "landing_hero_kicker": "Compagno di viaggio con IA",
@@ -1265,6 +1275,8 @@ I18N: Dict[str, Dict[str, str]] = {
         "footer_links": "Links",
         "footer_languages": "Sprachen",
         "footer_countries": "Länder",
+        "footer_google_source_title": "Füge SonicCity in Google als bevorzugte Quelle hinzu, um aktuelle Audioguides, Städtetipps, Routenvorschläge und Reiseinfos für deine nächste Reise zu erhalten.",
+        "footer_google_source_alt": "Google-Badge für die bevorzugte Quelle SonicCity",
         "seo_landing_title": "SonicCity: Echtzeit-Audioguides für Städte in der Nähe",
         "seo_landing_desc": "Map-first Audioguide mit Live-GPS, Erkennung naher Städte und mehrsprachiger Abschnitts-Wiedergabe für Fahrten.",
         "landing_hero_kicker": "KI-Begleiter für unterwegs",
@@ -8221,7 +8233,7 @@ def truncate_log_value(value: Any, limit: int = 500) -> str:
 
 def access_log_should_skip(path: str) -> bool:
     clean = path or "/"
-    if clean in {"/favicon.ico", "/robots.txt", "/sitemap.xml", "/llms.txt"}:
+    if clean in {"/favicon.ico", "/favicon.svg", "/favicon-96x96.png", "/favicon-48x48.png", "/favicon-32x32.png", "/favicon-16x16.png", "/apple-touch-icon.png", "/web-app-manifest-192x192.png", "/web-app-manifest-512x512.png", "/site.webmanifest", "/robots.txt", "/sitemap.xml", "/llms.txt"}:
         return True
     return clean.startswith(("/static/", "/media/"))
 
@@ -8353,7 +8365,7 @@ def apply_managed_redirects() -> Optional[Response]:
     if request.method not in {"GET", "HEAD"}:
         return None
     path = (request.path or "/").rstrip("/") or "/"
-    if path.startswith(("/admin", "/api", "/static", "/media")) or path in {"/robots.txt", "/sitemap.xml", "/llms.txt", "/favicon.ico"}:
+    if path.startswith(("/admin", "/api", "/static", "/media")) or path in {"/robots.txt", "/sitemap.xml", "/llms.txt", "/favicon.ico", "/favicon.svg", "/favicon-96x96.png", "/favicon-48x48.png", "/favicon-32x32.png", "/favicon-16x16.png", "/apple-touch-icon.png", "/web-app-manifest-192x192.png", "/web-app-manifest-512x512.png", "/site.webmanifest"}:
         return None
     for row in load_admin_redirects():
         if not isinstance(row, dict) or not row.get("active", True):
@@ -8431,7 +8443,7 @@ def entity_route_from_path(path: str) -> Optional[Dict[str, str]]:
     _, tail = split_path_lang(path)
     if not tail:
         return None
-    reserved = {"api", "media", "static", "img", "admin", "main", "c", "robots.txt", "sitemap.xml", "llms.txt", "favicon.ico"}
+    reserved = {"api", "media", "static", "img", "admin", "main", "c", "robots.txt", "sitemap.xml", "llms.txt", "favicon.ico", "favicon.svg", "favicon-96x96.png", "favicon-48x48.png", "favicon-32x32.png", "favicon-16x16.png", "apple-touch-icon.png", "web-app-manifest-192x192.png", "web-app-manifest-512x512.png", "site.webmanifest"}
     if tail[0] in reserved:
         return None
     country_slug = tail[0]
@@ -8528,7 +8540,7 @@ def available_langs_for_path(path: str) -> List[str]:
 def hreflang_links_for_request() -> List[Dict[str, str]]:
     path = canonical_path_for_request()
     parts = [p for p in path.split("/") if p]
-    reserved = {"api", "media", "static", "img", "admin", "main", "c", "robots.txt", "sitemap.xml", "llms.txt", "favicon.ico"}
+    reserved = {"api", "media", "static", "img", "admin", "main", "c", "robots.txt", "sitemap.xml", "llms.txt", "favicon.ico", "favicon.svg", "favicon-96x96.png", "favicon-48x48.png", "favicon-32x32.png", "favicon-16x16.png", "apple-touch-icon.png", "web-app-manifest-192x192.png", "web-app-manifest-512x512.png", "site.webmanifest"}
     if parts and parts[0] in reserved:
         return []
 
@@ -8557,7 +8569,7 @@ def current_lang() -> str:
         return normalize_lang(lang_on_path)
 
     parts = [p for p in path.split("/") if p]
-    reserved = {"api", "media", "static", "img", "admin", "main", "c", "robots.txt", "sitemap.xml", "llms.txt", "favicon.ico"}
+    reserved = {"api", "media", "static", "img", "admin", "main", "c", "robots.txt", "sitemap.xml", "llms.txt", "favicon.ico", "favicon.svg", "favicon-96x96.png", "favicon-48x48.png", "favicon-32x32.png", "favicon-16x16.png", "apple-touch-icon.png", "web-app-manifest-192x192.png", "web-app-manifest-512x512.png", "site.webmanifest"}
     if parts and parts[0] not in reserved:
         return "en"
     return normalize_lang(request.args.get("lang") or request.cookies.get("lang") or DEFAULT_LANG)
@@ -10974,7 +10986,52 @@ def google_site_verification():
 
 @app.get("/favicon.ico")
 def favicon_ico():
-    return send_from_directory(ROOT / "static" / "img", "soniccity-favicon.png", mimetype="image/png")
+    return send_from_directory(ROOT / "static" / "img", "favicon.ico", mimetype="image/vnd.microsoft.icon")
+
+
+@app.get("/favicon.svg")
+def favicon_svg():
+    return send_from_directory(ROOT / "static" / "img", "favicon.svg", mimetype="image/svg+xml")
+
+
+@app.get("/favicon-96x96.png")
+def favicon_png_96():
+    return send_from_directory(ROOT / "static" / "img", "favicon-96x96.png", mimetype="image/png")
+
+
+@app.get("/favicon-48x48.png")
+def favicon_png_48():
+    return send_from_directory(ROOT / "static" / "img" / "favicons", "favicon-48x48.png", mimetype="image/png")
+
+
+@app.get("/favicon-32x32.png")
+def favicon_png_32():
+    return send_from_directory(ROOT / "static" / "img" / "favicons", "favicon-32x32.png", mimetype="image/png")
+
+
+@app.get("/favicon-16x16.png")
+def favicon_png_16():
+    return send_from_directory(ROOT / "static" / "img" / "favicons", "favicon-16x16.png", mimetype="image/png")
+
+
+@app.get("/apple-touch-icon.png")
+def apple_touch_icon():
+    return send_from_directory(ROOT / "static" / "img" / "favicons", "apple-touch-icon.png", mimetype="image/png")
+
+
+@app.get("/web-app-manifest-192x192.png")
+def web_app_manifest_icon_192():
+    return send_from_directory(ROOT / "static" / "img" / "favicons", "web-app-manifest-192x192.png", mimetype="image/png")
+
+
+@app.get("/web-app-manifest-512x512.png")
+def web_app_manifest_icon_512():
+    return send_from_directory(ROOT / "static" / "img" / "favicons", "web-app-manifest-512x512.png", mimetype="image/png")
+
+
+@app.get("/site.webmanifest")
+def site_webmanifest():
+    return send_from_directory(ROOT / "static", "site.webmanifest", mimetype="application/manifest+json")
 
 
 SITEMAP_MAX_URLS = 10000
