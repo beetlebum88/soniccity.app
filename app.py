@@ -5276,7 +5276,14 @@ def schema_graph(
 
 
 def load_admin_json(path: Path, default: Any) -> Any:
-    data = load_json(path)
+    try:
+        data = load_json(path)
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+        try:
+            app.logger.error("Failed to load admin JSON %s: %s", path, exc)
+        except Exception:
+            pass
+        return default
     return data if data is not None else default
 
 
