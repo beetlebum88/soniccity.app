@@ -123,7 +123,7 @@ class AdminContentBlogTests(unittest.TestCase):
         self.assertNotIn("<script>", content["seoTextHtml"])
         self.assertNotIn("javascript:", content["seoTextHtml"])
 
-    def test_blog_drafts_are_hidden_and_published_posts_are_visible(self):
+    def test_blog_posts_can_be_managed_but_public_blog_is_removed(self):
         self.login()
         draft = self.client.post(
             "/admin/blog/new",
@@ -139,7 +139,7 @@ class AdminContentBlogTests(unittest.TestCase):
             },
         )
         self.assertEqual(draft.status_code, 302)
-        self.assertNotIn(b"Hidden draft", self.client.get("/blog").data)
+        self.assertEqual(self.client.get("/blog").status_code, 410)
 
         published = self.client.post(
             "/admin/blog/new",
@@ -158,8 +158,11 @@ class AdminContentBlogTests(unittest.TestCase):
             },
         )
         self.assertEqual(published.status_code, 302)
-        self.assertIn(b"Valencia audio tips", self.client.get("/blog").data)
-        self.assertIn(b"Listen free", self.client.get("/blog/valencia-audio-tips").data)
+        admin_list = self.client.get("/admin/blog/articles")
+        self.assertEqual(admin_list.status_code, 200)
+        self.assertIn(b"Valencia audio tips", admin_list.data)
+        self.assertEqual(self.client.get("/blog").status_code, 410)
+        self.assertEqual(self.client.get("/blog/valencia-audio-tips").status_code, 410)
 
 
 if __name__ == "__main__":

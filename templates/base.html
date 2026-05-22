@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="{{ HTML_LANG if HTML_LANG else CURRENT_LANG }}">
 <head>
-  {% set ASSET_VER = "20260522-player-link-1" %}
+  {% set ASSET_VER = "20260522-seo-robots-1" %}
   {% set _csrf_token = CSRF_TOKEN() if CSRF_TOKEN is defined else '' %}
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -13,7 +13,6 @@
   {% set _seo_image = seo_image if seo_image else '/static/img/place-placeholder.svg' %}
   {% set _seo_robots = seo_robots if seo_robots is defined and seo_robots else (SEO_ROBOTS if SEO_ROBOTS is defined else 'index,follow') %}
   {% set _lang_prefix = '' if CURRENT_LANG == 'en' else '/' ~ (CURRENT_LANG_PUBLIC if CURRENT_LANG_PUBLIC is defined else CURRENT_LANG) %}
-  {% set _blog_url = URL_BLOG(CURRENT_LANG) if URL_BLOG is defined else (_lang_prefix ~ '/blog') %}
   {% set _contact_url = URL_CONTACT(CURRENT_LANG) if URL_CONTACT is defined else (_lang_prefix ~ '/contacts/') %}
   {% if _seo_image.startswith('http') %}
     {% set _seo_image_abs = _seo_image %}
@@ -102,9 +101,6 @@
           </li>
           <li class="nav-item px-2 px-xl-2">
             <a class="nav-link fw-medium" href="{{ NAV_HOME_URL }}#popularPlaces">{{ T["nav_places"] }}</a>
-          </li>
-          <li class="nav-item px-2 px-xl-2">
-            <a class="nav-link fw-medium" href="{{ _blog_url }}">{{ T["nav_blog"] }}</a>
           </li>
           <li class="nav-item dropdown px-2 px-xl-2" id="europeNav">
             <a class="nav-link dropdown-toggle fw-medium" href="#" id="europeDropdown" role="button"
@@ -202,7 +198,6 @@
           <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#drivingMode">{{ T["footer_driving_mode"] }}</a>
           <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#walkingMode">{{ T["footer_walking_mode"] }}</a>
           <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#live">{{ T["footer_audio_player"] }}</a>
-          <a class="ct-footerLink" href="{{ _blog_url }}">{{ T["nav_blog"] }}</a>
         </div>
 
         <div class="ct-footerCol">
@@ -211,7 +206,6 @@
           <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#popularCities">{{ T["nav_cities"] }}</a>
           <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#popularPlaces">{{ T["nav_places"] }}</a>
           <a class="ct-footerLink" href="{{ NAV_HOME_URL }}#exploreGuides">{{ T["footer_popular_guides"] }}</a>
-          <a class="ct-footerLink" href="{{ _blog_url }}">{{ T["footer_travel_blog"] }}</a>
         </div>
 
         <div class="ct-footerCol">

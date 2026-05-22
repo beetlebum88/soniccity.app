@@ -1,20 +1,3 @@
 {
-  "posts": [
-    {
-      "id": "1f73e6f449332ba9",
-      "title": "dfssd",
-      "slug": "dfssd",
-      "lang": "en",
-      "status": "published",
-      "category": "Travel Audio Guides",
-      "tags": [],
-      "heroImage": "",
-      "excerpt": "cxvxcvxcvv",
-      "bodyMarkdown": "sdfsdfsdfsdf",
-      "metaTitle": "",
-      "metaDescription": "",
-      "publishedAt": "2026-05-16T20:30:53Z",
-      "updatedAt": "2026-05-16T20:30:53Z"
-    }
-  ]
+  "posts": []
 }

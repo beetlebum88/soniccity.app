@@ -167,7 +167,7 @@ ACCESS_LOG_GEO_LOOKUP = str(os.getenv("ACCESS_LOG_GEO_LOOKUP") or "").strip().lo
 ACCESS_LOG_LOCK = threading.Lock()
 AUTH_RATE_LIMIT_LOCK = threading.Lock()
 AUTH_RATE_LIMITS: Dict[str, List[int]] = defaultdict(list)
-GLOBAL_NOINDEX = str(os.getenv("GLOBAL_NOINDEX") or "1").strip().lower() not in {"0", "false", "no", "off"}
+GLOBAL_NOINDEX = str(os.getenv("GLOBAL_NOINDEX") or "0").strip().lower() not in {"0", "false", "no", "off"}
 GLOBAL_ROBOTS_META = "noindex,nofollow"
 GLOBAL_X_ROBOTS_TAG = "noindex, nofollow"
 
@@ -3914,6 +3914,20 @@ def enforce_csrf_protection():
     abort(400)
 
 
+@app.before_request
+def redirect_www_to_canonical_host() -> Optional[Response]:
+    if request.method not in {"GET", "HEAD"}:
+        return None
+    host = (request.headers.get("X-Forwarded-Host") or request.host or "").split(",", 1)[0].strip().lower()
+    host_name = host.split(":", 1)[0]
+    if host_name != f"www.{SITE_DOMAIN}":
+        return None
+    path = request.full_path if request.query_string else (request.path or "/")
+    if path.endswith("?"):
+        path = path[:-1]
+    return redirect(f"{SITE_URL}{path}", code=301)
+
+
 def uploaded_file_size(upload: Any) -> int:
     stream = getattr(upload, "stream", None)
     if not stream:
@@ -6618,6 +6632,16 @@ def default_robots_text() -> str:
                 "Disallow: /",
             ]
         ) + "\n"
+    sitemap_paths = [
+        "/sitemap.xml",
+        "/sitemap_default.xml",
+        "/fr/sitemap.xml",
+        "/es/sitemap.xml",
+        "/it/sitemap.xml",
+        "/uk/sitemap.xml",
+        "/de/sitemap.xml",
+    ]
+    sitemap_lines = [f"Sitemap: {absolute_url(path) if has_request_context() else f'{SITE_URL}{path}'}" for path in sitemap_paths]
     return "\n".join(
         [
             "User-agent: *",
@@ -6626,14 +6650,40 @@ def default_robots_text() -> str:
             "Disallow: /login/",
             "Disallow: /dashboard/",
             "Disallow: /account/",
+            "Disallow: /verify-email",
+            "Disallow: /reset-password",
             "Disallow: /preview/",
             "Disallow: /draft/",
             "Disallow: /internal/",
             "Disallow: /generate-audio/",
             "Disallow: /tts/",
             "Disallow: /cache/",
+            "Disallow: /blog",
+            "Disallow: /fr/blog",
+            "Disallow: /es/blog",
+            "Disallow: /it/blog",
+            "Disallow: /uk/blog",
+            "Disallow: /ua/blog",
+            "Disallow: /de/blog",
+            "Disallow: /blog.xml",
+            "Disallow: /categories.xml",
+            "Disallow: /fr/blog.xml",
+            "Disallow: /fr/categories.xml",
+            "Disallow: /es/blog.xml",
+            "Disallow: /es/categories.xml",
+            "Disallow: /it/blog.xml",
+            "Disallow: /it/categories.xml",
+            "Disallow: /uk/blog.xml",
+            "Disallow: /uk/categories.xml",
+            "Disallow: /ua/blog.xml",
+            "Disallow: /ua/categories.xml",
+            "Disallow: /de/blog.xml",
+            "Disallow: /de/categories.xml",
+            "Disallow: /*?login=",
+            "Disallow: /*?q=",
+            "Disallow: /*?search=",
             "Allow: /",
-            f"Sitemap: {absolute_url('/sitemap.xml') if has_request_context() else '/sitemap.xml'}",
+            *sitemap_lines,
         ]
     ) + "\n"
 
@@ -8420,6 +8470,14 @@ def entity_is_indexable_for_lang(kind: str, lang: str, country_slug: str, city_s
 
 def private_or_technical_path(path: str) -> bool:
     clean = (path or "/").split("?", 1)[0].rstrip("/") or "/"
+    _, tail = split_path_lang(clean)
+    if tail and tail[0] == "blog":
+        return True
+    sitemap_file = tail[-1] if tail else clean.lstrip("/")
+    if sitemap_file in {"blog.xml", "categories.xml"}:
+        return True
+    if sitemap_file in {"sitemap.xml", "sitemap_default.xml", "countries.xml", "city.xml", "cities.xml", "places.xml", "pages.xml", "lps.xml"}:
+        return False
     if clean.startswith((
         "/admin",
         "/api",
@@ -8435,7 +8493,7 @@ def private_or_technical_path(path: str) -> bool:
         "/cache",
     )):
         return True
-    return clean in {"/robots.txt", "/llms.txt", "/favicon.ico"} or clean.endswith(".json") or clean.endswith(".xml")
+    return clean.endswith(".json")
 
 
 def robots_meta_for_path(path: str, lang: Optional[str] = None) -> str:
@@ -10921,7 +10979,7 @@ def favicon_ico():
 
 
 SITEMAP_MAX_URLS = 10000
-SITEMAP_CATEGORY_ORDER = ["countries", "city", "places", "blog", "categories", "pages", "lps"]
+SITEMAP_CATEGORY_ORDER = ["countries", "city", "places", "pages", "lps"]
 
 
 def sitemap_iso_from_timestamp(ts: float) -> str:
@@ -11023,12 +11081,12 @@ def sitemap_category_path(lang: str, category: str) -> str:
     lang = normalize_lang(lang)
     category = "city" if category == "cities" else str(category or "").strip().lower()
     filename = f"{category}.xml"
-    return f"/{filename}" if lang == DEFAULT_LANG else f"/{lang}/{filename}"
+    return f"/{filename}" if lang == DEFAULT_LANG else f"/{public_lang_code(lang)}/{filename}"
 
 
 def sitemap_language_index_path(lang: str) -> str:
     lang = normalize_lang(lang)
-    return "/sitemap_default.xml" if lang == DEFAULT_LANG else f"/{lang}/sitemap.xml"
+    return "/sitemap_default.xml" if lang == DEFAULT_LANG else f"/{public_lang_code(lang)}/sitemap.xml"
 
 
 def sitemap_admin_page_is_indexable(page_key: str, lang: str) -> bool:
@@ -11329,6 +11387,34 @@ def server_error(error):
     )
 
 
+@app.errorhandler(410)
+def gone(error):
+    lang = current_lang()
+    return (
+        render_template(
+            "error.html",
+            lang=lang,
+            status_code=410,
+            title="Page removed",
+            message="This page has been removed from SonicCity.",
+            seo_title=f"Page removed | {BRAND_NAME}",
+            seo_desc="This SonicCity page has been removed.",
+            seo_type="website",
+            seo_image="/static/img/place-placeholder.svg",
+            seo_schema={
+                "@context": "https://schema.org",
+                "@type": "WebPage",
+                "name": f"Page removed | {BRAND_NAME}",
+                "url": absolute_url(canonical_path_for_request()),
+            },
+            T=t(lang),
+            body_class="PageError",
+            use_leaflet=False,
+        ),
+        410,
+    )
+
+
 @app.get("/sitemap.xml")
 def sitemap_xml():
     rows = [sitemap_index_entry(sitemap_language_index_path(DEFAULT_LANG), sitemap_lastmod())]
@@ -11361,11 +11447,15 @@ def sitemap_language_xml(lang: str):
 
 @app.get("/<re('countries|city|cities|places|blog|categories|pages|lps'):category>.xml")
 def sitemap_default_category_xml(category: str):
+    if str(category or "").strip().lower() in {"blog", "categories"}:
+        abort(410)
     return sitemap_xml_response(sitemap_rows_for_category(DEFAULT_LANG, category))
 
 
 @app.get("/<re('fr|es|it|ua|uk|de'):lang>/<re('countries|city|cities|places|blog|categories|pages|lps'):category>.xml")
 def sitemap_language_category_xml(lang: str, category: str):
+    if str(category or "").strip().lower() in {"blog", "categories"}:
+        abort(410)
     return sitemap_xml_response(sitemap_rows_for_category(lang, category))
 
 
@@ -12903,11 +12993,12 @@ def blog_sidebar_context(lang: str, posts: Optional[List[Dict[str, Any]]] = None
 
 @app.get("/blog")
 def blog_index_en():
-    return blog_index(DEFAULT_LANG)
+    abort(410)
 
 
 @app.get("/<re('fr|es|it|ua|uk|de'):lang>/blog")
 def blog_index(lang: str):
+    abort(410)
     lang = normalize_lang(lang)
     q = clean_plain_text(request.args.get("q") or "", 120)
     category = clean_plain_text(request.args.get("category") or "", 80).lower()
@@ -12982,11 +13073,12 @@ def blog_index(lang: str):
 
 @app.get("/blog/<slug>")
 def blog_detail_en(slug: str):
-    return blog_detail(DEFAULT_LANG, slug)
+    abort(410)
 
 
 @app.get("/<re('fr|es|it|ua|uk|de'):lang>/blog/<slug>")
 def blog_detail(lang: str, slug: str):
+    abort(410)
     lang = normalize_lang(lang)
     post = find_blog_post(slug, lang=lang)
     if not post:
