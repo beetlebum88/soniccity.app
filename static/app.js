@@ -2452,7 +2452,7 @@ function setPlayerVisible(show) {
 function setPlayerExpanded(open) {
   if (!playerEl) playerEl = document.getElementById("stickyPlayer");
   if (!playerEl) return;
-  const active = !!open && !playerEl.hidden;
+  const active = false;
   playerSheetOpen = active;
   playerEl.classList.toggle("is-expanded", active);
   document.body.classList.toggle("ag-playerSheetOpen", active);
@@ -2464,28 +2464,7 @@ function setPlayerExpanded(open) {
 function renderPlayerQueueSheet() {
   const q = $("plQueue");
   if (!q) return;
-  const queue = globalPlayerQueueSnapshot();
-  if (!queue.length) {
-    q.innerHTML = `<p class="ag-playerQueueEmpty">${escapeHtml(tr("player_pick_city_topic", "Pick a city or topic to begin."))}</p>`;
-    return;
-  }
-  const current = Number.isFinite(Number(currentChunkIdx)) ? Number(currentChunkIdx) : -1;
-  q.innerHTML = queue.map((item, idx) => {
-    const active = idx === current;
-    const duration = Number(item.duration) > 0 ? formatTime(Number(item.duration)) : "";
-    const pct = active ? Math.max(4, Math.floor(audioPlaybackProgress().ratio * 100)) : 0;
-    const title = String(item.title || tr("city_outline", "Audio stories"));
-    return `
-      <button class="ag-playerQueueItem${active ? " is-active" : ""}" type="button" data-player-queue-index="${idx}">
-        <span class="ag-playerQueueIndex">${String(idx + 1).padStart(2, "0")}</span>
-        <span class="ag-playerQueueCopy">
-          <b>${escapeHtml(title)}</b>
-          <small>${active ? escapeHtml(tr("audio_playing", "Playing audio…")) : escapeHtml(tr("player_choose_story", "Choose an audio story"))}${duration ? ` · ${escapeHtml(duration)}` : ""}</small>
-          <i style="width:${pct}%"></i>
-        </span>
-      </button>
-    `;
-  }).join("");
+  q.innerHTML = "";
 }
 
 function setPlayerAuthGate(active) {
@@ -4555,7 +4534,7 @@ function renderHeadingsOnly(article) {
     left.style.flexDirection = "column";
     left.style.gap = "5px";
     left.style.flex = "1";
-    left.style.minWidth = "180px";
+    left.style.minWidth = "0";
 
     const titleRow = document.createElement("div");
     titleRow.style.display = "flex";

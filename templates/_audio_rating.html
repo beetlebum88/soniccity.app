@@ -5,11 +5,11 @@
       <h3>{{ T["rating_title"] if T is defined else "Rate this audio guide" }}</h3>
       <p>{{ T["rating_help"] if T is defined else "Help travelers choose useful SonicCity audio stories." }}</p>
       <p class="ux-ratingSummary" aria-label="{{ T['rating_current'] if T is defined else 'Current audio guide rating' }}">
-        <span class="ux-starMeter" aria-hidden="true">
-          <span class="ux-starMeterBase">★★★★★</span>
-          <span class="ux-starMeterFill" style="width: {{ audio_rating.ratingPercent or 0 }}%">★★★★★</span>
-        </span>
         {% if audio_rating.ratings %}
+          <span class="ux-starMeter" aria-hidden="true">
+            <span class="ux-starMeterBase">★★★★★</span>
+            <span class="ux-starMeterFill" style="width: {{ audio_rating.ratingPercent or 0 }}%">★★★★★</span>
+          </span>
           <span>{{ "%.1f"|format(audio_rating.ratingAverage) }} / 5 · {{ audio_rating.ratings }} {{ T["rating_count"] if T is defined else "ratings" }}</span>
         {% else %}
           <span>{{ T["rating_no_ratings"] if T is defined else "No ratings yet" }}</span>
