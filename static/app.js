@@ -2452,7 +2452,7 @@ function setPlayerVisible(show) {
 function setPlayerExpanded(open) {
   if (!playerEl) playerEl = document.getElementById("stickyPlayer");
   if (!playerEl) return;
-  const active = false;
+  const active = !!open && !playerEl.hidden;
   playerSheetOpen = active;
   playerEl.classList.toggle("is-expanded", active);
   document.body.classList.toggle("ag-playerSheetOpen", active);
@@ -2814,14 +2814,24 @@ function ensurePlayer() {
     now.setAttribute("tabindex", "0");
     now.addEventListener("click", (ev) => {
       if (ev?.target?.closest?.("button,a,input,label")) return;
-      setPlayerExpanded(!playerSheetOpen);
+      setPlayerExpanded(true);
     });
     now.addEventListener("keydown", (ev) => {
       if (!ev) return;
       if (ev.key === "Enter" || ev.key === " ") {
         ev.preventDefault();
-        setPlayerExpanded(!playerSheetOpen);
+        setPlayerExpanded(true);
       }
+    });
+  }
+
+  const inner = playerEl.querySelector(".ag-player-inner");
+  if (inner) {
+    inner.addEventListener("click", (ev) => {
+      const target = ev?.target;
+      if (!target || playerSheetOpen) return;
+      if (target.closest?.(".ag-player-now,button,a,input,label,.ag-bar")) return;
+      setPlayerExpanded(true);
     });
   }
 

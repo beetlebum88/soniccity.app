@@ -13752,8 +13752,57 @@ body:not(.PageAdmin):not(.PageAdminCms):not(.PageDjangoAdmin) :is(button,.btn,.a
 }
 
 /* Mobile polish follow-up: no queue blocks in the dock, compact audio cards, tidy map popups. */
-.ag-playerSheet,
+.ag-playerSheet{
+  display:none !important;
+}
+
 .ag-playerSheetClose{
+  display:none;
+}
+
+.ag-player.is-expanded{
+  min-height:132px !important;
+}
+
+.ag-player:not(.is-expanded) .ag-player-inner{
+  cursor:pointer;
+}
+
+.ag-player .ag-player-ctrls,
+.ag-player .ag-bar,
+.ag-player .ag-playerSheetClose{
+  cursor:default;
+}
+
+.ag-player.is-expanded .ag-player-inner{
+  position:relative;
+  padding:18px !important;
+}
+
+.ag-player.is-expanded .ag-playerSheetClose{
+  position:absolute;
+  top:10px;
+  right:12px;
+  z-index:5;
+  display:inline-flex !important;
+  align-items:center;
+  justify-content:center;
+  width:40px;
+  min-width:40px;
+  height:40px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:26px;
+  line-height:1;
+}
+
+.ag-player.is-expanded .ag-player-now{
+  padding-right:44px;
+}
+
+.ag-player.is-expanded .ag-playerSheet{
   display:none !important;
 }
 
@@ -13865,6 +13914,23 @@ body:not(.PageAdmin):not(.PageAdminCms):not(.PageDjangoAdmin) :is(button,.btn,.a
     line-height:1.1 !important;
     white-space:normal !important;
     text-align:center !important;
+  }
+
+  .ag-player.is-expanded .ag-playerSheet{
+    display:none !important;
+  }
+
+  .ag-player.is-expanded .ag-player-volume{
+    grid-column:1 / -1;
+    display:inline-flex !important;
+    width:100%;
+    min-height:44px;
+    justify-content:space-between;
+  }
+
+  .ag-player.is-expanded .ag-player-volume input{
+    flex:1 1 auto;
+    width:auto;
   }
 }
 
