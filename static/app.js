@@ -383,11 +383,12 @@ let chunkStartTs = 0;
 let chunkWps = 0;
 let pauseStartedTs = 0;
 
- // Player DOM
- let playerEl = null;
- let playerTimer = null;
- let playbackSession = 0;
- let activeUtterId = 0;
+// Player DOM
+let playerEl = null;
+let playerSheetOpen = false;
+let playerTimer = null;
+let playbackSession = 0;
+let activeUtterId = 0;
 
 function nextPlaybackSession() {
   playbackSession += 1;
@@ -2445,12 +2446,53 @@ function setPlayerVisible(show) {
   const vis = !!show;
   playerEl.hidden = !vis;
   document.body.classList.toggle("BodyHasPlayer", vis);
+  if (!vis) setPlayerExpanded(false);
+}
+
+function setPlayerExpanded(open) {
+  if (!playerEl) playerEl = document.getElementById("stickyPlayer");
+  if (!playerEl) return;
+  const active = !!open && !playerEl.hidden;
+  playerSheetOpen = active;
+  playerEl.classList.toggle("is-expanded", active);
+  document.body.classList.toggle("ag-playerSheetOpen", active);
+  const close = $("plCloseSheet");
+  if (close) close.hidden = !active;
+  renderPlayerQueueSheet();
+}
+
+function renderPlayerQueueSheet() {
+  const q = $("plQueue");
+  if (!q) return;
+  const queue = globalPlayerQueueSnapshot();
+  if (!queue.length) {
+    q.innerHTML = `<p class="ag-playerQueueEmpty">${escapeHtml(tr("player_pick_city_topic", "Pick a city or topic to begin."))}</p>`;
+    return;
+  }
+  const current = Number.isFinite(Number(currentChunkIdx)) ? Number(currentChunkIdx) : -1;
+  q.innerHTML = queue.map((item, idx) => {
+    const active = idx === current;
+    const duration = Number(item.duration) > 0 ? formatTime(Number(item.duration)) : "";
+    const pct = active ? Math.max(4, Math.floor(audioPlaybackProgress().ratio * 100)) : 0;
+    const title = String(item.title || tr("city_outline", "Audio stories"));
+    return `
+      <button class="ag-playerQueueItem${active ? " is-active" : ""}" type="button" data-player-queue-index="${idx}">
+        <span class="ag-playerQueueIndex">${String(idx + 1).padStart(2, "0")}</span>
+        <span class="ag-playerQueueCopy">
+          <b>${escapeHtml(title)}</b>
+          <small>${active ? escapeHtml(tr("audio_playing", "Playing audio…")) : escapeHtml(tr("player_choose_story", "Choose an audio story"))}${duration ? ` · ${escapeHtml(duration)}` : ""}</small>
+          <i style="width:${pct}%"></i>
+        </span>
+      </button>
+    `;
+  }).join("");
 }
 
 function setPlayerAuthGate(active) {
   if (!playerEl) playerEl = document.getElementById("stickyPlayer");
   const gate = $("plAuthGate");
   if (!playerEl || !gate) return;
+  if (active) setPlayerExpanded(false);
   const inner = playerEl.querySelector(".ag-player-inner");
   playerEl.classList.toggle("is-auth-locked", !!active);
   gate.hidden = !active;
@@ -2785,6 +2827,44 @@ function ensurePlayer() {
   bindTap("plSpeed", () => playerSpeedAction());
   bindTap("plVoice", () => setVoiceGender(voiceGender === "male" ? "female" : "male"));
   bindTap("plSaveGuide", () => saveCurrentGuide($("plSaveGuide")));
+  bindTap("plCloseSheet", () => setPlayerExpanded(false));
+
+  const now = playerEl.querySelector(".ag-player-now");
+  if (now) {
+    now.setAttribute("role", "button");
+    now.setAttribute("tabindex", "0");
+    now.addEventListener("click", (ev) => {
+      if (ev?.target?.closest?.("button,a,input,label")) return;
+      setPlayerExpanded(!playerSheetOpen);
+    });
+    now.addEventListener("keydown", (ev) => {
+      if (!ev) return;
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        setPlayerExpanded(!playerSheetOpen);
+      }
+    });
+  }
+
+  const queue = $("plQueue");
+  if (queue) {
+    queue.addEventListener("click", (ev) => {
+      const btn = ev?.target?.closest?.("[data-player-queue-index]");
+      if (!btn) return;
+      ev.preventDefault();
+      const idx = Number(btn.getAttribute("data-player-queue-index"));
+      if (!Number.isFinite(idx)) return;
+      if (!playerIsActive) {
+        playerToggleAction();
+        return;
+      }
+      jumpToChunk(idx);
+    });
+  }
+
+  document.addEventListener("keydown", (ev) => {
+    if (ev?.key === "Escape" && playerSheetOpen) setPlayerExpanded(false);
+  });
 
   const volumeInput = $("plVolume");
   if (volumeInput) {
@@ -3085,6 +3165,7 @@ function renderPlayerProgress() {
       loadingProgress: ratioLoading,
       isPlaying: false,
     });
+    renderPlayerQueueSheet();
     return;
   }
 
@@ -3152,6 +3233,7 @@ function renderPlayerProgress() {
     isPlaying: !!(playerIsActive && !isPaused),
     isLoading: false,
   });
+  renderPlayerQueueSheet();
 }
 
 function stopRenderLoop() {

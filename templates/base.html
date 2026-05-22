@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="{{ HTML_LANG if HTML_LANG else CURRENT_LANG }}">
 <head>
-  {% set ASSET_VER = "20260521-lang-switch-en-1" %}
+  {% set ASSET_VER = "20260522-mobile-player-1" %}
   {% set _csrf_token = CSRF_TOKEN() if CSRF_TOKEN is defined else '' %}
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -294,6 +294,7 @@
 <!-- Sticky player (controlled by static/app.js) -->
 <div id="stickyPlayer" class="ag-player" hidden>
   <div class="ag-player-inner">
+    <button id="plCloseSheet" class="ag-playerSheetClose" type="button" aria-label="{{ T['map_close'] }}" hidden>×</button>
     <div class="ag-player-top">
       <div class="ag-player-now">
         <div class="ag-player-cover" aria-hidden="true">
@@ -350,6 +351,14 @@
       <div id="plKnobLabel" class="ag-knobLabel" style="left:0%">--:--</div>
     </div>
     <div id="plLoading" class="ag-playerLoading" hidden>{{ T["audio_loading"] }}</div>
+    <div id="plSheet" class="ag-playerSheet" aria-label="{{ T['player_choose_story'] }}">
+      <div class="ag-playerSheetHandle" aria-hidden="true"></div>
+      <div class="ag-playerSheetTools" aria-label="{{ T['voice_label'] }}">
+        <span>{{ T["voice_label"] }}</span>
+        <span>{{ T["player_speed"] }}</span>
+      </div>
+      <div id="plQueue" class="ag-playerQueue" aria-live="polite"></div>
+    </div>
   </div>
   <div id="plAuthGate" class="ag-playerAuthGate" hidden>
     <p>{{ T["player_auth_gate"] }}</p>

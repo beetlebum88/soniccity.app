@@ -12918,3 +12918,835 @@ body:not(.PageAdmin):not(.PageAdminCms):not(.PageDjangoAdmin) :is(button,.btn,.a
   min-width:max-content !important;
   font-weight:500 !important;
 }
+
+/* Mobile responsive QA pass: compact public layouts and a proper bottom player. */
+@media (max-width: 767.98px){
+  :root{
+    --ag-mobile-player-height: 96px;
+  }
+
+  html,
+  body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+
+  body:not(.PageAdmin):not(.PageAdminCms):not(.PageDjangoAdmin) :is(.main,.container,section,article,aside,main,nav,form,div,ul,li){
+    min-width:0;
+  }
+
+  body:not(.PageAdmin):not(.PageAdminCms):not(.PageDjangoAdmin) :is(img,video,canvas,iframe,svg){
+    max-width:100%;
+  }
+
+  body.BodyHasPlayer{
+    padding-bottom:calc(var(--ag-mobile-player-height) + env(safe-area-inset-bottom, 0px) + 14px) !important;
+  }
+
+  body.BodyHasPlayer:not(.ag-mapOverlayOpen) .main,
+  body.BodyHasPlayer:not(.ag-mapOverlayOpen) .ct-footer{
+    padding-bottom:24px !important;
+  }
+
+  body.ag-playerSheetOpen{
+    overflow:hidden;
+  }
+
+  .ct-navbar{
+    min-height:66px;
+  }
+
+  .ct-navbar .container{
+    width:100%;
+    max-width:100%;
+    padding-inline:14px;
+  }
+
+  .ct-brandLogo img{
+    width:min(176px, 58vw);
+    height:auto;
+    object-fit:contain;
+  }
+
+  .ct-brandTextFallback:not([hidden]){
+    display:inline-flex;
+    align-items:center;
+    min-height:44px;
+    color:#fff;
+    font-size:clamp(24px, 7vw, 34px);
+    font-weight:850;
+  }
+
+  .navbar-toggler{
+    width:48px;
+    min-width:48px;
+    height:44px;
+    border:1px solid rgba(255,255,255,.28);
+    border-radius:10px;
+  }
+
+  .ct-heroSearchSlot{
+    padding-top:86px !important;
+  }
+
+  .PageLanding .ct-heroSearchSlot + .ux-homeHero,
+  .ct-heroSearchSlot + .ux-entityHero{
+    padding-top:24px !important;
+  }
+
+  .ct-heroSearchWrap,
+  .ag-search-input{
+    width:100%;
+  }
+
+  .ag-search-input{
+    min-height:54px;
+    font-size:16px;
+  }
+
+  .ux-homeHero,
+  .ux-entityHero,
+  .ux-section,
+  .ux-contactPage,
+  .ux-accountPage{
+    padding-left:0 !important;
+    padding-right:0 !important;
+  }
+
+  .PageLanding .ux-homeHero{
+    padding-top:22px !important;
+  }
+
+  .ux-productHeroCopy h1,
+  .ux-heroCopy h1,
+  .ux-entityHeroCopy h1{
+    max-width:100%;
+    font-size:clamp(32px, 11vw, 48px) !important;
+    line-height:1.05 !important;
+    overflow-wrap:anywhere;
+  }
+
+  .ux-productHeroCopy p,
+  .ux-entityHeroCopy p,
+  .ux-sectionHead p,
+  .ux-textBlock p{
+    font-size:clamp(15px, 4.2vw, 18px);
+    line-height:1.55;
+  }
+
+  .ux-actions,
+  .ux-heroActions{
+    display:grid !important;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .ux-actions > *,
+  .ux-heroActions > *,
+  .ct-primaryBtn,
+  .ct-secondaryBtn,
+  .ux-commentOpenBtn,
+  .ux-heroSaveBtn{
+    width:100%;
+    min-height:46px;
+    justify-content:center;
+    white-space:normal;
+  }
+
+  .ux-trustBullets,
+  .ux-heroMeta,
+  .ux-cardMeta,
+  .ux-filterChips,
+  .ux-popularSearches{
+    max-width:100%;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+
+  .ux-trustBullets::-webkit-scrollbar,
+  .ux-heroMeta::-webkit-scrollbar,
+  .ux-cardMeta::-webkit-scrollbar,
+  .ux-filterChips::-webkit-scrollbar,
+  .ux-popularSearches::-webkit-scrollbar{
+    display:none;
+  }
+
+  .ux-entityHeroMedia{
+    width:100%;
+  }
+
+  .ux-entityHeroMedia img,
+  .ux-blogHero .ux-entityHeroMedia img{
+    width:100%;
+    max-height:300px;
+    border-radius:22px;
+  }
+
+  .ux-storyCardLarge,
+  .ux-sideCard,
+  .ux-textBlock,
+  .ux-commentsBlock,
+  .ux-contactIntro,
+  .ux-contactFormCard,
+  .ux-accountHero,
+  .ux-accountPanel{
+    border-radius:22px !important;
+  }
+
+  .ux-storyCardLarge{
+    padding:14px !important;
+  }
+
+  .ux-storyHead{
+    grid-template-columns:1fr !important;
+  }
+
+  .ux-storyHead h2{
+    font-size:clamp(24px, 7vw, 34px) !important;
+    line-height:1.08;
+  }
+
+  .ag-voiceToggle{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .ag-voiceBtn{
+    min-height:44px;
+    white-space:normal;
+  }
+
+  .ux-playerActions{
+    grid-template-columns:1fr 1fr !important;
+    gap:8px !important;
+    margin-bottom:10px !important;
+  }
+
+  .ux-playerActions .btn{
+    width:100%;
+    min-height:46px;
+    padding-inline:8px !important;
+    white-space:normal;
+  }
+
+  .ux-audioRating{
+    grid-template-columns:1fr !important;
+    gap:12px;
+    padding:12px !important;
+  }
+
+  .ux-audioRatingActions,
+  .ux-audioRatingForm,
+  .ux-audioRatingForm .ux-ratingLabel,
+  .ux-audioRatingForm .ux-ratingAutoHint{
+    width:100%;
+    justify-items:start !important;
+  }
+
+  .ux-audioRatingCommentBtn{
+    width:100%;
+    min-height:44px;
+  }
+
+  .ag-secTop{
+    grid-template-columns:minmax(0,1fr) auto !important;
+  }
+
+  .ag-secBtns{
+    display:flex;
+    gap:8px;
+  }
+
+  .ag-iconBtn,
+  .ux-playDot{
+    min-width:44px !important;
+    min-height:44px !important;
+  }
+
+  .ux-mapCard,
+  .ux-mapCardLarge,
+  .ux-demoMapCard,
+  .ux-modeMap,
+  .ux-walkingMap,
+  .PageLanding .ux-liveMapCard{
+    height:min(380px, 68vh) !important;
+    min-height:320px !important;
+    border-radius:22px;
+  }
+
+  .ct-mapTopbar{
+    align-items:stretch;
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+  .ag-mapTopActions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    width:100%;
+  }
+
+  .ag-mapAction{
+    min-height:44px;
+    padding-inline:12px;
+    white-space:normal;
+  }
+
+  .ux-cardGrid,
+  .ux-blogPostGrid,
+  .ux-blogLayout,
+  .ux-contactShell,
+  .ux-accountGrid,
+  .ux-relatedGrid{
+    grid-template-columns:1fr !important;
+  }
+
+  .ux-guideCard{
+    max-width:100%;
+  }
+
+  .ux-guideCard > img:not(.Flag),
+  .ux-cardImageLink > img,
+  .ag-placeImageLink > img{
+    width:100%;
+    aspect-ratio:16/10;
+    object-fit:cover;
+  }
+
+  .ux-guideCardBody{
+    margin:-18px 10px 10px !important;
+    padding:14px !important;
+  }
+
+  .ux-blogArticle,
+  .ux-blogArticle :is(p,li){
+    font-size:16px;
+    line-height:1.65;
+  }
+
+  .ux-blogArticle :is(img,figure,table,pre){
+    max-width:100%;
+    overflow:auto;
+  }
+
+  .ux-blogEngagementGrid,
+  .ux-commentsSection .ux-commentForm,
+  .ux-commentForm,
+  .ux-contactForm{
+    grid-template-columns:1fr !important;
+  }
+
+  .ux-commentsSection .ux-commentForm{
+    width:100%;
+    padding:14px !important;
+    border-radius:20px;
+  }
+
+  .ux-commentComposer{
+    width:100%;
+  }
+
+  .ux-commentToggle{
+    width:100%;
+    justify-content:center;
+  }
+
+  .ux-checkboxField{
+    grid-template-columns:auto minmax(0,1fr) !important;
+    align-items:start !important;
+  }
+
+  .ux-commentSubmit,
+  .ux-contactSubmit{
+    width:100%;
+    justify-self:stretch;
+  }
+
+  .ux-accountTabs{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    padding-bottom:4px;
+    scrollbar-width:none;
+  }
+
+  .ux-accountTabs::-webkit-scrollbar{
+    display:none;
+  }
+
+  .ux-accountTabs a{
+    flex:0 0 auto;
+  }
+
+  .ux-accountPanelHead{
+    align-items:stretch;
+    flex-direction:column;
+  }
+
+  .ux-accountHistoryCard{
+    grid-template-columns:1fr !important;
+  }
+
+  .ux-accountHistoryLink{
+    overflow-wrap:anywhere;
+  }
+
+  .ct-footerColsWide{
+    grid-template-columns:1fr !important;
+  }
+
+  .ct-footerBottom{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .ag-player{
+    left:8px !important;
+    right:8px !important;
+    bottom:max(8px, env(safe-area-inset-bottom, 0px)) !important;
+    width:auto !important;
+    max-width:none !important;
+    border-radius:20px !important;
+    background:linear-gradient(180deg, rgba(16,24,54,.98), rgba(7,12,31,.98)) !important;
+    box-shadow:0 -8px 34px rgba(0,0,0,.42), 0 0 32px rgba(41,214,255,.14) !important;
+  }
+
+  .ag-player-inner{
+    position:relative;
+    padding:10px !important;
+  }
+
+  .ag-player-top{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    align-items:center !important;
+    gap:8px !important;
+  }
+
+  .ag-player-now{
+    min-height:56px;
+    cursor:pointer;
+  }
+
+  .ag-player-copy{
+    min-width:0;
+  }
+
+  .ag-player-title,
+  .ag-player-meta,
+  .ag-player-status{
+    max-width:calc(100vw - 174px) !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  .ag-player-status{
+    display:block;
+    font-size:10px !important;
+  }
+
+  .ag-player-title{
+    font-size:14px !important;
+    line-height:1.15 !important;
+  }
+
+  .ag-player-meta{
+    font-size:11px !important;
+  }
+
+  .ag-player-cover{
+    width:42px;
+    height:42px;
+  }
+
+  .ag-player-ctrls{
+    display:flex !important;
+    justify-content:flex-end !important;
+    gap:8px !important;
+  }
+
+  .ag-player-ctrls :is(#plPrev,#plStop,#plSpeed,#plVoice,#plSaveGuide),
+  .ag-player-volume,
+  .ag-player-stats{
+    display:none !important;
+  }
+
+  .ag-player-btn{
+    width:44px !important;
+    min-width:44px !important;
+    height:44px !important;
+    min-height:44px !important;
+    padding:0 !important;
+    border-radius:16px !important;
+    font-size:12px !important;
+    font-weight:500 !important;
+  }
+
+  .ag-player-btn svg{
+    width:22px;
+    height:22px;
+  }
+
+  .ag-bar{
+    height:8px !important;
+    margin-top:6px !important;
+  }
+
+  .ag-knob{
+    width:14px !important;
+    height:14px !important;
+  }
+
+  .ag-knobLabel{
+    display:none !important;
+  }
+
+  .ag-playerLoading{
+    margin-top:7px !important;
+    font-size:11px;
+  }
+
+  .ag-playerSheet,
+  .ag-playerSheetClose{
+    display:none;
+  }
+
+  .ag-player.is-expanded{
+    inset:auto 0 0 0 !important;
+    max-height:min(92dvh, 720px) !important;
+    overflow:hidden;
+    border-radius:28px 28px 0 0 !important;
+  }
+
+  .ag-player.is-expanded .ag-player-inner{
+    max-height:min(92dvh, 720px);
+    display:grid;
+    grid-template-rows:auto auto auto minmax(0,1fr);
+    overflow:hidden;
+    padding:14px !important;
+  }
+
+  .ag-player.is-expanded .ag-playerSheetClose{
+    position:absolute;
+    top:10px;
+    right:12px;
+    z-index:5;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:40px;
+    min-width:40px;
+    height:40px;
+    border:1px solid rgba(255,255,255,.16);
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    font-size:26px;
+    line-height:1;
+  }
+
+  .ag-player.is-expanded .ag-player-top{
+    grid-template-columns:1fr !important;
+    padding-top:30px;
+  }
+
+  .ag-player.is-expanded .ag-player-now{
+    padding-right:40px;
+  }
+
+  .ag-player.is-expanded .ag-player-title,
+  .ag-player.is-expanded .ag-player-meta,
+  .ag-player.is-expanded .ag-player-status{
+    max-width:100% !important;
+    white-space:normal !important;
+  }
+
+  .ag-player.is-expanded .ag-player-title{
+    font-size:18px !important;
+  }
+
+  .ag-player.is-expanded .ag-player-ctrls{
+    display:grid !important;
+    grid-template-columns:repeat(4, minmax(0,1fr));
+    width:100%;
+  }
+
+  .ag-player.is-expanded .ag-player-ctrls :is(#plPrev,#plStop,#plSpeed,#plVoice,#plSaveGuide),
+  .ag-player.is-expanded .ag-player-stats{
+    display:inline-flex !important;
+  }
+
+  .ag-player.is-expanded .ag-player-btn{
+    width:100% !important;
+    min-width:0 !important;
+    height:44px !important;
+    padding-inline:8px !important;
+    white-space:nowrap !important;
+  }
+
+  .ag-player.is-expanded .ag-player-btn:is(#plSpeed,#plVoice,#plSaveGuide){
+    grid-column:span 2;
+    font-size:12px !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  .ag-player.is-expanded .ag-player-stats{
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    width:100%;
+    font-size:12px;
+  }
+
+  .ag-player.is-expanded .ag-playerSheet{
+    min-height:0;
+    display:grid;
+    gap:10px;
+    overflow:hidden;
+  }
+
+  .ag-playerSheetHandle{
+    width:46px;
+    height:4px;
+    margin:2px auto 0;
+    border-radius:999px;
+    background:rgba(255,255,255,.24);
+  }
+
+  .ag-playerSheetTools{
+    display:none;
+  }
+
+  .ag-playerQueue{
+    min-height:0;
+    display:grid;
+    gap:8px;
+    overflow:auto;
+    padding:2px 1px max(10px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .ag-playerQueueItem{
+    display:grid;
+    grid-template-columns:38px minmax(0,1fr);
+    gap:10px;
+    align-items:center;
+    min-height:58px;
+    padding:9px;
+    border:1px solid rgba(140,164,225,.2);
+    border-radius:16px;
+    background:rgba(255,255,255,.055);
+    color:#eef6ff;
+    text-align:left;
+  }
+
+  .ag-playerQueueItem.is-active{
+    border-color:rgba(41,214,255,.5);
+    background:
+      radial-gradient(180px 90px at 0% 0%, rgba(41,214,255,.18), transparent 70%),
+      rgba(255,255,255,.08);
+  }
+
+  .ag-playerQueueIndex{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:38px;
+    height:38px;
+    border-radius:14px;
+    background:rgba(255,255,255,.08);
+    color:#c8d4f2;
+    font-size:12px;
+  }
+
+  .ag-playerQueueCopy{
+    display:grid;
+    gap:4px;
+    min-width:0;
+  }
+
+  .ag-playerQueueCopy b,
+  .ag-playerQueueCopy small{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .ag-playerQueueCopy small{
+    color:#b9c5e3;
+    font-size:11px;
+  }
+
+  .ag-playerQueueCopy i{
+    display:block;
+    width:0;
+    height:4px;
+    overflow:hidden;
+    border-radius:999px;
+    background:linear-gradient(90deg,#29d6ff,#8b5cf6);
+  }
+
+  .ag-playerQueueEmpty{
+    margin:0;
+    padding:14px;
+    border:1px dashed rgba(140,164,225,.22);
+    border-radius:16px;
+    color:#c8d4f2;
+  }
+
+  .ag-player.is-auth-locked .ag-playerAuthGate{
+    inset:8px;
+    padding:14px;
+    border-radius:20px;
+  }
+
+  .ag-playerAuthGate p{
+    font-size:14px;
+  }
+
+  .ag-fullMapOverlay{
+    z-index:7000;
+  }
+
+  .ag-fullMapTopbar{
+    min-width:0;
+  }
+
+  .ag-fullMapTopbar h2{
+    min-width:0;
+  }
+
+  .ag-fullMapTopActions{
+    min-width:0;
+  }
+
+  .ag-fullMapTopActions .ag-mapAction{
+    max-width:128px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .ag-mapSidebar{
+    left:8px !important;
+    right:8px !important;
+    max-width:calc(100vw - 16px);
+  }
+
+  .ag-mapPlaceList{
+    overscroll-behavior:contain;
+  }
+
+  .ag-mapPlaceList li{
+    grid-template-columns:minmax(0,1fr);
+  }
+
+  .ag-mapPlaceList :is(.ag-mapPlacePlay,.ag-mapPlaceRoute){
+    width:100%;
+  }
+
+  .leaflet-popup-content{
+    max-width:min(260px, calc(100vw - 72px));
+  }
+}
+
+@media (max-width: 430px){
+  :root{
+    --ag-mobile-player-height: 100px;
+  }
+
+  .container{
+    padding-left:12px !important;
+    padding-right:12px !important;
+  }
+
+  .ux-productHeroCopy h1,
+  .ux-heroCopy h1,
+  .ux-entityHeroCopy h1{
+    font-size:clamp(30px, 10.5vw, 40px) !important;
+  }
+
+  .ux-heroMeta span,
+  .ux-trustBullets span,
+  .ux-cardMeta span{
+    font-size:11px !important;
+  }
+
+  .ag-player-cover{
+    display:none;
+  }
+
+  .ag-player-title,
+  .ag-player-meta,
+  .ag-player-status{
+    max-width:calc(100vw - 128px) !important;
+  }
+
+  .ag-player-ctrls{
+    gap:6px !important;
+  }
+
+  .ag-player-btn{
+    width:42px !important;
+    min-width:42px !important;
+  }
+
+  .ag-player.is-expanded .ag-player-cover{
+    display:grid;
+  }
+}
+
+@media (max-width: 360px){
+  .ux-playerActions,
+  .ag-mapTopActions{
+    grid-template-columns:1fr !important;
+  }
+
+  .ag-player.is-expanded .ag-player-ctrls{
+    grid-template-columns:repeat(3, minmax(0,1fr));
+  }
+
+  .ag-player.is-expanded .ag-player-btn:is(#plSpeed,#plVoice,#plSaveGuide){
+    grid-column:span 3;
+  }
+}
+
+@media (max-width: 900px){
+  .PageAdmin .ct-adminShell,
+  .PageAdminCms .ux-cmsShell,
+  .ux-adminShell{
+    grid-template-columns:1fr !important;
+  }
+
+  .PageAdmin .ct-adminSide,
+  .PageAdminCms .ux-cmsSidebar,
+  .ux-adminSidebar{
+    position:relative !important;
+    top:auto !important;
+    height:auto !important;
+    max-height:48dvh;
+    overflow:auto;
+  }
+
+  .PageAdmin .ct-adminMain,
+  .PageAdminCms .ux-cmsMain,
+  .ux-adminMain{
+    width:100%;
+    padding:16px !important;
+  }
+
+  .ux-adminTableWrap,
+  .ct-adminTableWrap,
+  .ux-cmsTableWrap{
+    overflow-x:auto;
+  }
+
+  .ux-adminTopbar,
+  .ux-cmsTopbar,
+  .ct-adminHead{
+    align-items:stretch !important;
+    flex-direction:column !important;
+  }
+}
